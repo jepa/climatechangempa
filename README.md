@@ -4,22 +4,21 @@
 This repository is intended to support the project *Marine Protected Areas Can Reduce Localized Losses to Fisheries Under Climate Change* 
 
 # Authors
-- Juliano Palacios-Abrantes*^1^, Sarah M. Roberts^2^, Tim Cashion^3^, Talya ten Brink^4^, William W.L. Cheung^1^, Anne Mook^5^ and Tu Nguyen^6^
+- Juliano Palacios-Abrantes*<sup>1</sup>, Sarah M. Roberts<sup>2</sup>, Tim Cashion<sup>3</sup>, Talya ten Brink<sup>4</sup>, William W.L. Cheung<sup>1</sup>, Anne Mook<sup>5</sup> and Tu Nguyen<sup>6</sup>
 
 # Affiliations
 
-- ^1^Changing Ocean Research Unit, Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, BC, Canada
+1. Changing Ocean Research Unit, Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, BC, Canada
 
-- ^2^Marine Geospatial Ecology Lab, Nicholas School of the Environment and Earth Sciences, Duke University, Durham, NC, USA
+2. Marine Geospatial Ecology Lab, Nicholas School of the Environment and Earth Sciences, Duke University, Durham, NC, USA
 
-- ^3^Fisheries Economics Research Unit, Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, BC, Canada
+3. Fisheries Economics Research Unit, Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, BC, Canada
 
-- ^4^Department of Marine Affairs, University of Rhode Island, Kingston, RI, USA
+4 .Department of Marine Affairs, University of Rhode Island, Kingston, RI, USA
 
-- ^5^Department of International Studies, American University of Sharjah, Sharjah, United Arab Emirates
+5. Department of International Studies, American University of Sharjah, Sharjah, United Arab Emirates
 
-- ^6^Department of Applied Economics, Oregon State University, Corvallis, OR, USA"
-
+6. Department of Applied Economics, Oregon State University, Corvallis, OR, USA"
 
 \*Corresponding author: Juliano Palacios-Abrantes, j.palacios@oceans.ubc.ca
 
