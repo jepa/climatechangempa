@@ -1,0 +1,1738 @@
+---
+title: "SESYNC MPA and Climate Change DBEM Analysis"
+author: ""
+date: "04/05/2018"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+# 1.Overall approach
+
+## 1.1 Step 1 (Ecology)
+
+We first average the Fish Model's Maximum Catch Potential (MCP) of 2005 to 2014 (last years of fisheries data from SAU) for each species for each one of the circulation models (GCM) that we work with (GFDL, MPIL, IPSL). Secondly, we average the 2005-2014 average for all models (To get the 10 years average; "today"). Thirdly, we repeat the steps using the abundance data.
+
+**Result of step 1:** The result is the mean MCP of all models and time period for each species in our database for each grid-cell of the world.
+
+## 1.2 Step 2 (Economics)
+
+We estimate fisheries revenues as the weighted average price multiplied by the predicted catch in each cell. As countries have different prices for different species, we used current catch proportions by country and species in each cell to derive a weighted average price per tonne for each species. The weighted price was established using the proportion of each country’s catch multiplied by the country-species specific price. All prices were drawn from a global fisheries ex-vessel price database (Tai et al. 2017). We assume a discount rate of 4%. We calculated the existence value as the potential ex-vessel value of the species (their current ex-vessel price multiplied by their biomass). Within a no-take MPA, catches are assumed to be zero. If a cell is partially occupied by a no-take MPA, the fishing mortality (and thus catches) of a species is reduced by the proportion of the cell area occupied by the MPA.
+
+**Result of step 2:** The result is the mean fisheries revenue of all models and time period for each species in our database for each grid-cell of the world. We also compute the existence value calculated as the mean weighted fish price multiplied by ABD for each species for each cell. 
+
+## 1.3 Step 3 (Final Result)
+
+**Result of step 3:** We want MCP,ABD and economic value, per grid cell Today (2005 - 2014); Mid century (2041-2060); End Century (2081-2099).
+
+# 2. Pre-Analysis; Determine MPA percentage grid
+
+```{r setup, eval=T, echo=F, warning=F,message=F, results = 'hide'}
+
+#### READ ME !!! ####
+# This chunk runs all the pkgs needed for the analysis
+# Run this chunk before knit so you make sure you have all pkgs installed in R
+# If you want to run it you will need to change the "path" of the DBEM_imp_F.R function
+
+#### Set up packages ####
+
+ipak <- function(pkg){
+  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+  if (length(new.pkg)) 
+    install.packages(new.pkg, dependencies = TRUE)
+  sapply(pkg, require, character.only = TRUE)
+}
+
+
+#### Library ###
+packages <- c(
+  "readxl", # Read dataframe
+  "dplyr", # Data manipulation
+  "tidyr", # Data manipulation
+  "ggpubr", #Nice grpahs and spatial analysis
+  "gridExtra", # For gridarrange
+  "cowplot", # For putting graphs in nice grids
+  "knitr",
+  "data.table",
+  "stringr", # for string analysis
+  "rgdal", # Spatial analysis 
+  "tools", # Spatial analysis 
+  "sf", # Shapefile packages
+  "broom", # for multiple statistics
+  "moments", # for exploring normallity
+  "rfishbase", # for getting spp hab
+  "wesanderson"
+  )
+
+ipak(packages)
+
+# Functions needed to run the analysis
+source("./Functions/species_function.R")
+source("./Functions/rcp_summary.R")
+source("./Functions/DBEM_imp.R")
+source("./Functions/model_results.R")
+
+```
+
+
+```{r Grid_Analysis, eval=F, echo=T}
+
+# Create dataset of MPAs to incorporate into the DBEM
+# NOTE:
+# grid_MPA_notake.csv <- was created using ARCGIS (SA) using the World Data base
+
+
+# Data
+grid_MPA_notake <- read.csv("/nfs/mpasandclimatechange-data/Data/MPA/grid_MPA_notake.csv")
+# View(grid_MPA_notake)
+
+# Formula in the DBEM
+# x *(1-MPA_Index(i))
+
+# Double check it make sense
+
+FM = rnorm(259200,0.5,.1)
+
+Check_Data <- grid_MPA_notake %>% 
+  mutate(
+    FM = FM,
+    NoTakeProp = NoTakePercent/100,
+    Test = round(FM * (1-NoTakeProp),2)
+  ) %>% 
+  filter(NoTakeProp > 0)
+
+ggplot(Check_Data) +
+  geom_tile(
+    aes(
+      x = Lon,
+      y = Lat,
+      colour = NoTakeProp,
+      fill =NoTakeProp
+    )
+  ) +
+  geom_sf(data = World_Land_sf,
+          aes()
+  ) + scale_colour_gradient2() +
+  scale_fill_gradient2()
+
+
+# Yes, makes sense! 
+
+#  Creating datafile for DBEM (Computecanada)
+MPA_Indexb <- grid_MPA_notake %>% 
+  mutate(NoTakeProp = NoTakePercent/100) %>% 
+  select(NoTakeProp)
+
+write.csv(MPA_Indexb,
+          "MPA_Indexb.txt",
+          row.names = F
+          )
+```
+
+
+# 3. Run Analysis
+
+## Run SESYNC model on DBEM data
+
+```{r Control_pannel, eval=T, echo=F}
+
+# Load all data needed to run the routine
+
+# Time frame
+year_df <- tibble(year =  c(seq(1995,2014,1), seq(2041,2060,1), seq(2081,2100,1)),
+                  time_period = c(rep("Today", 20), rep("Mid Century", 20), rep("End of Century", 20))
+                  )
+
+
+#Get list of species for analysis by comparing between MPA and Fish model species lists:
+mpa_model_species <- data_frame(x = list.files("/nfs/mpasandclimatechange-data/Data/DBEM/MPA_Model/GFDL26"))
+fish_model_species <- data_frame(x = list.files("/nfs/mpasandclimatechange-data/Data/DBEM/Fish_Model/GFDL26"))
+exploited_species <- inner_join(mpa_model_species, fish_model_species)
+
+# Spatialzied catch data (From SAU) (Pauly & Zeller, 2015)
+country_species_catch_prop <- fread("/nfs/mpasandclimatechange-data/Data/Economics/CountrySpeciesCatchProp.csv")
+
+# Price data (From FERU) (Tai et al., 2017, Sumaila et al. 2005)
+prices <- fread("/nfs/mpasandclimatechange-data/Data/Economics/FERU_Price_Averaged.csv")
+
+# Estimate who catches what for estimating price
+country_prop_price <- left_join(country_species_catch_prop, prices) %>%
+  rename(INDEX= cell_id) %>% 
+  mutate(fishing_entity_id = as.character(fishing_entity_id),
+         taxon_key = as.character(taxon_key),
+         price = as.numeric(as.character(price)),
+         price = if_else(is.na(price), 1496, price),
+         weighted_price = price * prop,
+         weighted_flexibility = flexibility * prop
+  ) %>%
+  group_by(INDEX, taxon_key) %>% 
+  summarize(price = sum(weighted_price),
+            flexibility = sum(weighted_flexibility)
+  ) %>% 
+  ungroup() 
+
+# Load Lat long data of the world
+Lon_Lat_DBEM <- fread("/nfs/mpasandclimatechange-data/Data/Lon_Lat_DBEM.txt",header = FALSE)
+colnames(Lon_Lat_DBEM) <- c("INDEX","Longitude","Latitude")    
+
+```
+
+
+```{r main_routine, eval = T, echo = F}
+
+# This chunk runs the model for each conservation (fish and MPA) and climate change (low and high) scenario
+
+start <- Sys.time()
+fish_26 <- model_results(Model="Fish", 
+                         RCP="26",
+                         species_list=exploited_species$x, 
+                         GCM=NA, 
+                         year_df=year_df, 
+                         country_prop_price=country_prop_price)
+end <- Sys.time()
+fish26_time <- as.character(end-start)
+
+start <- Sys.time()
+fish_85 <- model_results(Model="Fish", 
+                         RCP="85", 
+                         species_list=exploited_species$x, 
+                         GCM=NA, 
+                         year=year_df, 
+                         country_prop_price=country_prop_price) 
+end <- Sys.time()
+fish85_time <- as.character(end-start)
+start <- Sys.time()
+mpa_26 <- model_results(Model="MPA", 
+                        RCP="26", 
+                        species_list=exploited_species$x, 
+                        GCM=NA, 
+                        year=year_df, 
+                        country_prop_price=country_prop_price)
+end <- Sys.time()
+mpa26_time <- as.character(end-start)
+start <- Sys.time()
+mpa_85 <- model_results(Model="MPA", 
+                        RCP="85", 
+                        species_list=exploited_species$x, 
+                        GCM=NA, 
+                        year=year_df, 
+                        country_prop_price=country_prop_price) 
+end <- Sys.time()
+mpa85_time <- end-start
+
+```
+
+# 4. Results
+
+## 4.1 Functions needed to get results
+
+Load functions needed for analyzing results
+
+### 4.1.1 `FUN_ReadResults`
+
+This function simply reads the results in one single data frame
+
+```{r FUN_ReadResults, eval = T, echo = F}
+
+# This function loads the datasets depending on the model and RCP. 
+
+
+Read_Results <- function(Model,RCP,Path="NA"){
+  require(DT)
+  require(dplyr)
+  
+  # If path changes
+  if(Path == "NA"){
+    File_Path <- "/nfs/mpasandclimatechange-data/Data/Results/"
+  }else{
+    File_Path <- Path
+  }
+  
+  
+  # For both models in once
+  if(Model == "Both"){
+    
+    F_File <- paste("Fish_RCP",RCP,"_All_GCMs_20.csv", # include Wave_ for old results
+                    sep="")
+    
+    M_File <- paste("MPA_RCP",RCP,"_All_GCMs_20.csv", # include Wave_ for old results
+                    sep="")
+    
+    F_Data <- fread(paste(File_Path,F_File,
+                          sep=""))
+    
+    M_Data <- fread(paste(File_Path,M_File,
+                          sep=""))
+    
+    Both_Models <- F_Data %>% 
+      bind_rows(M_Data) %>% 
+      filter(time_period != "NA")
+    
+    return(Both_Models)
+    
+  }else{
+    
+    File <- paste(Model,"_RCP",RCP,".csv", 
+                  sep="")
+    
+    Data <- fread(paste(File_Path,File,
+                        sep=""))
+    
+    return(Data)
+    
+  }
+  
+}
+```
+
+### 4.1.2 `FUN_ggthemes`
+
+This function standardizes `ggplot` themes among all plots
+
+```{r FUN_ggtheme, eval =T, echo = F}
+
+
+# Standarization of plots
+ggtheme_Plot <- function() {
+  theme(
+    plot.title = element_text(size = rel(1), hjust = 0, face = "bold"),
+    panel.background = element_blank(),
+    strip.background = element_blank(),
+    # strip.text       = element_text(size = base_size, face = "italic"),
+    panel.border     = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank(),
+    axis.ticks = element_blank(),
+    axis.text.x = element_text(size = 18,
+                               angle = 0,
+                               face = "plain"),
+    axis.text.y = element_text(size = 18),
+    axis.title = element_text(size = 20),
+    legend.key = element_rect(colour = NA, fill = NA),
+    legend.position  = "top",
+    legend.title = element_text(size = 16),
+    legend.text = element_text(size = 14),
+    strip.text.x = element_text(size = 18, colour = "darkgrey"),
+    strip.text = element_text(size = 18)
+  )
+}
+
+# Standarization of maps
+ggtheme_Map <- function(base_size = 9, Region = "NA") {
+  theme(
+    # text             = element_text(#family = "Helvetica",color = "gray30", size = base_size),
+    plot.title       = element_text(size = rel(1.25), hjust = 0, face = "bold"),
+    panel.background = element_blank(),
+    panel.border     = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "transparent"),
+    strip.background =element_rect(fill = "transparent"),
+    strip.text.x = element_text(size = 18, colour = "black",face= "bold", angle = 0),
+    axis.line        = element_blank(), # element_line(colour = "grey30", size = .5))
+    axis.ticks       = element_blank(),
+    axis.text        = element_blank(),
+    axis.title       = element_blank(),
+    legend.key       = element_rect(colour = NA, fill = NA, size = 4),
+    legend.position = "bottom",
+    legend.key.width = unit(5,"line"),
+    legend.title = element_text(size = 22, colour =),
+    legend.text = element_text(size = 20)
+  )
+}
+```
+
+## 4.2 Load Data and Results
+
+```{r Load_Results, eval = T, echo = F}
+
+# Data needed for the analysis
+
+# ---------------- #
+# Spatial Data 
+# ---------------- #
+
+# Latitude_Long_Data
+Lon_Lat_DBEM <- fread("/nfs/mpasandclimatechange-data/Data/Lon_Lat_DBEM.txt",header = FALSE)
+colnames(Lon_Lat_DBEM) <- c("INDEX","Longitude","Latitude")   
+
+# World land polyon for maps
+
+# The path
+path_world <- "/nfs/mpasandclimatechange-data/Data/Spatial_Data/World_Land"
+
+# File name
+file_name <- "TM_WORLD_BORDERS"
+
+#Load it!
+World_Land_sf <- st_read(dsn = path_world, 
+                         layer = file_path_sans_ext(file_name)
+)
+
+# Base plot
+World_Map <- ggplot(World_Land_sf) +
+  geom_sf()
+
+
+# MPA shapefiles
+
+path_MPA <- "/nfs/mpasandclimatechange-data/Data/MPA"
+
+# File name
+MPA_file_name <- "CM_noTake"
+
+#Load it!
+MPA_sf <- st_read(dsn = path_MPA, 
+                         layer = file_path_sans_ext(MPA_file_name)
+                  ) %>% 
+  st_transform(crs = 4326)
+
+
+# head(MPA_sf)
+# ggplot(MPA_sf) +
+#   geom_sf()
+
+
+# MPA touching grid dataset (0= no MPA, 1=MPA, 2=touching)"
+MPA_Grid <- fread("/nfs/mpasandclimatechange-data/Data/MPA/grid_MPA_touching.csv",header = TRUE) %>% 
+  rename(INDEX = Seq) %>% 
+  select(-Lon,-Lat)
+
+# hist(MPA_Grid$Distance)
+
+# ---------------- #
+# SESYNC-DBEM Data 
+# ---------------- #
+
+# Fish and MPA model for RCP 2.6
+Both_Models26 <- Read_Results("Both","26") %>% 
+  mutate(RCP = as.character(RCP))
+
+# Fish and MPA model for RCP 8.5
+Both_Models85 <- Read_Results("Both","85") %>% 
+  mutate(RCP = as.character(RCP))
+
+# Join both models in one dataset for plotting
+
+### First, filter out regions where data is allways 0 (A.k.A we have no species there)
+NoData <- Both_Models85  %>% 
+  bind_rows(Both_Models26) %>% 
+  group_by(INDEX) %>% 
+  summarise(sum= sum(total)) %>% 
+  filter(sum == 0) %>% 
+  pull(INDEX)
+
+#### Then, join models and filter out those regions where no spp. were evaluated
+All_Models <- Both_Models85  %>% 
+  bind_rows(Both_Models26) %>% 
+  # This is needed to remove cells that are ceros but actually have no fish data
+  filter(!INDEX %in% NoData) %>% 
+  select(-n)
+  
+
+# Path for saving results (Note that we have ./Figures for figures)
+Result_Path <- "./data/Data/Results"
+
+
+```
+
+
+# 5. Paper Figures
+
+## Fig. 1 -Delta time just for MPA
+
+Figure 1. Change in biomass under climate change, incorporating current no-take MPAs.** Results for mid century (2041-2060) relative to present (1995-2014) under a high emission scenario (RCP 8.5). Results from the MPA model with MPAs included in this study outlined in black.
+
+```{r Fig_one__Data, eval = T, echo = F}
+
+Delta_Time <- All_Models %>% 
+  spread(time_period,total) %>% 
+  mutate_at(vars(`Mid Century`, # Estimate percentage differences
+                 `End of Century`),
+            funs(ifelse(Today == 0 & . == 0, 0, # If for no change than 0
+                        ifelse(Today == 0 & . > 0, 100, # If changes from 0 to anything then 100
+                               ((.-Today)/((.+Today)/2))*100 # Estimate percentage differences
+                        )
+            )
+            )
+  ) %>% 
+  gather("time_period","MCP_Chng",`Mid Century`,`End of Century`) %>% 
+  select(-Today) %>%
+  mutate(
+    MCP_Chng = ifelse(is.na(MCP_Chng), 0, MCP_Chng), 
+    Per = ifelse(MCP_Chng <= -25, -25,
+                 ifelse(MCP_Chng >= 25, 25,MCP_Chng) # Just to set the percentage bounds
+    )
+  ) %>% 
+  filter(Measure == "Mean") %>% 
+  left_join(MPA_Grid,
+            by = "INDEX")
+
+
+# head(Delta_Time)
+# max(Delta_Time$Per)
+# min(Delta_Time$Per)
+
+```
+
+
+```{r Figure_One_plot, eval = T, echo = F}
+
+ggplot() +
+  geom_tile(data = subset(Delta_Time, 
+                          Model == "MPA" &
+                            Data_Type == "Abd" &
+                            time_period == "Mid Century",
+                          RCP = 85),
+              aes(
+                x = Longitude,
+                y = Latitude,
+                fill = Per
+              )
+  ) +
+  geom_sf(data = World_Land_sf, colour = "grey50", fill = "grey50") +
+  geom_sf(data = MPA_sf, colour = "black", fill = NA, size = 0.5) +
+  scale_fill_gradient2("Percentage Change in Biomass (%)",
+                       labels = c("<-25",seq(-20,20,5),">25"),
+                       breaks = c(seq(-25,25,5)),
+                       na.value = "grey90"
+                       ) +
+  ggtheme_Map() +
+  guides(fill = guide_legend(title.position = "top",
+                             label.position = "bottom",
+                             title.hjust = 0.5,
+                             nrow = 1,
+                             byrow = TRUE)
+  ) +
+  ggsave(
+    width = 12,
+    height = 7,
+    units = "in",
+    filename = "Figure1.png",
+    path= "./data/Global Paper/Submission/Figures"
+  )
+
+
+```
+
+## Fig. 2. Boxplot changes over time MPA
+
+Fig. 2. Percentage change of biomass within regions containing MPAs and in surrounding waters relative to today.** Whiskers represent 1.5* interquartile range. Box represents interquartile range as distance between first and third quartiles. Line represents median, and black points represent outliers (outside of 1.5*IQR)
+
+```{r Fig_two_data, eval = F, echo = T}
+
+Delta_Time_MPA <- All_Models %>% 
+  filter(
+    Measure == "Mean",
+    Model == "MPA",
+    Data_Type %in% c("Abd"),
+  ) %>% 
+  spread(time_period,total) %>% 
+  mutate_at(vars(`Mid Century`, # Estimate percentage difference
+                 `End of Century`),
+            funs(ifelse(Today == 0 & . == 0, 0, # If for no difference than 0
+                        ifelse(Today == 0 & . > 0, 100, # If changes from 0 to anything then 100
+                               ((.-Today)/((.+Today)/2))*100 # Estimate percentage difference
+                        )
+            )
+            )
+  ) %>% 
+  gather("time_period","MCP_Chng",`Mid Century`,`End of Century`) %>% 
+  select(-Today) %>% 
+  left_join(MPA_Grid,
+            by = "INDEX") %>% 
+  mutate(Per = ifelse(MCP_Chng <= -25, -25,
+                      ifelse(MCP_Chng >= 25, 25,MCP_Chng) # Just to set the percentage bounds
+  ),
+  Touching = ifelse(Touching==1, "MPA",
+                    ifelse(Touching==2, "Surrounding",
+                           NA
+                    )
+  ),
+  RCP = ifelse(RCP== 26,"Low","High"),
+  time_period = ifelse(time_period== "End of Century","B","A"),
+  Order = ifelse(RCP == "Low",1,2)
+  ) %>% 
+  filter(!is.na(Touching))
+
+```
+
+```{Fig_two_plot, eval = T, echo = F}
+
+ggplot(Delta_Time_MPA,
+       aes(
+         x = reorder(RCP,Order),
+         y = Per,
+         fill = Touching
+       )
+) +
+  geom_boxplot() +
+  scale_color_manual("Region", 
+                     values = wes_palette("Darjeeling2")
+  ) +
+  scale_fill_manual("Region", 
+                    values = wes_palette("Darjeeling2"),
+  ) +
+  scale_y_continuous("Percentage Change\n(Relative to Today)",
+                     labels = c("<-25",seq(-20,20,5),">25"),
+                     breaks = c(seq(-25,25,5))) +
+  labs(x = "Emission Scenario") + 
+  ggtheme_Plot() +
+  theme(legend.position = "right",
+        strip.background = element_blank(),
+        strip.text.x = element_text(size = 18, colour = "black", face = "bold")
+  ) +
+  facet_wrap(~ time_period,
+             labeller=as_labeller(c(
+               "B" = "End of Century",
+               "A" = "Mid Century"))
+  ) +
+  ggsave(
+    width = 13,
+    height = 10,
+    units = "in",
+    filename = "Figure2.png",
+    path= "./data/Global Paper/Submission/Figures"
+  )
+
+
+# Exploring outliers for disucssion
+# As expected, most of them are > 40 and <-40
+
+# head(Delta_Time_MPA)
+# 
+# Lat_mean_Out <- Delta_Time_MPA %>% 
+#   filter(Per > 20)
+# 
+#   ggplot() +
+#   geom_raster(data = subset(Lat_mean_Out, Model == "MPA" & Data_Type == "Abundance" & time_period == "Mid Century"),
+#               aes(
+#                 x = Longitude,
+#                 y = Latitude,
+#                 fill = Per
+#               )
+#   )
+
+
+```
+
+
+## Fig. 3. - Differences Map
+
+Fig. 3.  Biomass (A) and revenue (B) differences between the MPA and the no-MPA scenarios.** Results for mid century (2041-2060) under high emission scenario (RCP 8.5) within MPA and surrounding cells up to 7.5 decimal degrees (~825 km) from an MPA border representing 99% of the cumulative distribution. Density plots (C) represent the average difference between the MPA and no-MPA models aggregated by latitude (frequency of values from <-25% to >25%) in all areas, waters containing MPAs, surrounding waters, and unprotected water.
+
+
+```{r Figure_three_Data, eval = T, echo = F}
+
+# ---------------------- #
+# Delta Models data (Map)
+# ---------------------- #
+
+Results_Data <- All_Models %>% 
+  filter(Data_Type %in% c("Abd","revenue"),
+         Measure == "Mean",
+         RCP == 85
+  ) %>% 
+  spread("Model","total") %>% 
+  mutate(
+    MPA = ifelse(is.na(MPA), 0, MPA), # I believe there are parts that MPA model does not have?
+    Fish = ifelse(is.na(Fish), 0, Fish),
+    Diff_Models = ifelse(MPA == 0 & Fish == 0, 0, # If MPA and Fish are cero, then no difference
+                         ifelse(MPA == 0 & Fish > 0, -100, # If MPA is cero but Fish >0 then -100 
+                                ifelse(MPA > 0 & Fish == 0, 100, # If MPA > 0 but Fish = 0, then +100
+                                       ((MPA-Fish)/((MPA+Fish)/2))*100
+                                )
+                         )
+    ),
+    # Just to set the percentage bounds
+    Per = ifelse(Diff_Models <= -25, -25,
+                 ifelse(Diff_Models >= 25, 25,Diff_Models)
+    ),
+    # For plot labels
+    Data_Type = ifelse(Data_Type == "Abd","Biomass","Revenue")
+  ) %>% 
+  left_join(MPA_Grid,
+            by = "INDEX") %>% 
+  mutate(
+    Touching_b = ifelse(Touching == 0,"Unprotected",
+                        ifelse(Touching == 1, "MPA",
+                               ifelse(Touching == 2, "Surrounding",
+                                      NA
+                               )
+                        )
+    )
+  )
+
+# Exploring the dataset
+# head(Results_Data)
+# unique(Results_Data$Touching)
+# unique(Results_Data$time_period)
+# unique(Results_Data$MPApresentNoTake)
+# hist(Results_Data$Diff_Models)
+
+# unique(Results_Data$Touching)
+# unique(Results_Data$Geo_Region)
+
+# Some NA's... 
+# Results_Data %>% 
+  # filter(is.na(MPA)C)
+
+# Plot them... 
+
+# Results_Data %>% 
+#   filter(is.na(MPA)) %>% 
+#   ggplot()+
+#   geom_tile(
+#     aes(
+#       x = Longitude,
+#       y = Latitude,
+#       fill = Per
+#     )
+#   )
+
+### Revenue increase spillover
+
+# ---------------------- #
+# Spillover data (histograms)
+# ---------------------- #
+
+Spillover_diff_Lat <- Results_Data %>% 
+  group_by(Latitude, time_period, RCP,Measure,Data_Type, Touching_b) %>% 
+  summarize(total_value = mean(Diff_Models), #mean percent change
+            n_cells = n(),
+            rate = total_value/n_cells)
+
+Spillover_diff_Lat$total_value <- Spillover_diff_Lat$total_value %>% 
+  replace_na(0)
+
+Spillover_diff_Lat_1 <- Results_Data %>% 
+  group_by(Latitude, time_period, RCP,Measure,Data_Type) %>% 
+  summarize(total_value = mean(Diff_Models), #mean percent change
+            n_cells = n(),
+            rate = total_value/n_cells)
+
+Spillover_diff_Lat_1$total_value <- Spillover_diff_Lat_1$total_value %>% 
+  replace_na(0)
+
+```
+
+```{r Fig_three_plot, eval = T, echo = F}
+
+# --------------------- #
+# Create maps (A and B)
+# --------------------- #
+
+# Abundance Map (A)
+Map_Abd <- ggplot() +
+  geom_raster(data = subset(Results_Data, Data_Type == "Biomass" & time_period == "Mid Century"),
+              aes(
+                x = Longitude,
+                y = Latitude,
+                fill = Per
+              )
+  ) +
+  geom_sf(data = World_Land_sf, colour = "grey50", fill = "grey50") +
+  scale_fill_gradient2("Change relative to present (%)",
+                       labels = c("<-25",seq(-20,20,5),">25"),
+                       breaks = c(seq(-25,25,5)),
+                       na.value = "grey90"
+                       ) +
+  ggtheme_Map() +
+  theme(legend.position = "")
+  
+
+# Revenue Map (B)
+Map_Rev <- ggplot() +
+  geom_tile(data = subset(Results_Data, Data_Type == "Revenue" & time_period == "Mid Century"),
+              aes(
+                x = Longitude,
+                y = Latitude,
+                fill = Per
+              )
+  ) +
+  geom_sf(data = World_Land_sf, colour = "grey50", fill = "grey50") +
+  geom_sf(data = MPA_sf, colour = "grey50", fill = "grey50", size = 0.5) +
+  scale_fill_gradient2("Differences between models (%)",
+                       labels = c("<-25",seq(-20,20,5),">25"),
+                       breaks = c(seq(-25,25,5)),
+                       na.value = "grey90"
+                       ) +
+  ggtheme_Map() +
+  guides(fill = guide_legend(title.position = "top",
+                             label.position = "bottom",
+                             title.hjust = 0.5,
+                             nrow = 1,
+                             byrow = TRUE)
+  )
+
+# Get legend for cowplot
+legend_map <- get_legend(Map_Rev)
+
+# Re-plot without legend
+Map_Rev <- Map_Rev +
+  theme(legend.position = "")
+
+# --------------------- #
+# Create histograms (C)
+# --------------------- #
+
+# Abundance Histogram (No Latitudinal differentiation- C top)
+Hist_Abd <- ggplot() + 
+  geom_path(data = subset(Spillover_diff_Lat, Data_Type == "Biomass" & time_period == "Mid Century"), 
+            aes(y=Latitude, 
+                x=total_value, 
+                color=Touching_b),
+            size = 1) +
+  geom_path(data = subset(Spillover_diff_Lat_1, Data_Type == "Biomass"),
+            aes(y=Latitude, 
+                x=total_value, 
+                color = "Total"),
+            size = 1
+            ) +
+  scale_color_manual(values = wes_palette("Darjeeling2")) +
+  scale_x_continuous(breaks = 0) +
+  ggtheme_Plot() +
+  labs(x = "",
+       y = "") +
+  theme(
+  axis.text.y = element_blank(),
+  legend.position = "",
+  legend.key.width = unit(2,"line"),
+  legend.title = element_text(size = 22),
+  legend.text = element_text(size = 20)
+  ) +
+  geom_vline(xintercept = 0, colour = "black", linetype = "dotted") 
+
+# Revenue Histogram (No Latitudinal differentiation- C bottom)
+Hist_Rev <- ggplot() + 
+  geom_path(data = subset(Spillover_diff_Lat, Data_Type == "Revenue" & time_period == "Mid Century"), 
+            aes(y=Latitude, 
+                x=total_value, 
+                color=Touching_b),
+            size = 1)  +
+  geom_path(data = subset(Spillover_diff_Lat_1, Data_Type == "Revenue"),
+            aes(y=Latitude, 
+                x=total_value, 
+                color = "Total"), 
+            size = 1) +
+  geom_vline(xintercept = 0, colour = "black",linetype = "dotted") +
+  scale_color_manual("Spillover effect by latitude",
+                     values = wes_palette("Darjeeling2")
+  ) +
+  scale_x_continuous(breaks = 0) +
+  ggtheme_Plot() +
+  labs(x = "",
+       y = "") +
+  theme(
+    axis.text.y = element_blank(),
+    legend.position = "bottom",
+    legend.title = element_text(size = 22),
+    legend.text = element_text(size = 20)
+  ) +
+  guides(color = guide_legend(title.position = "top",
+                              label.position = "right",
+                              title.hjust = 0.5,
+                              nrow = 1,
+                              byrow = TRUE)
+  )
+
+# Get legend for cowplot
+legend_hist <- get_legend(Hist_Rev)
+
+# Re-plot without legend
+Hist_Rev <- Hist_Rev +
+  theme(legend.position = "")
+
+
+# --------------- #
+# Plot them all
+# --------------- #
+
+plot <- ggdraw() +
+  # Abundance
+  draw_plot(Map_Abd, x = 0, y = 0.6, width = 0.6, height = 0.4) +
+  draw_plot(Hist_Abd, x = 0.59, y = 0.59, width = 0.3, height = 0.4) +
+  # Revenue
+  draw_plot(Map_Rev, x = 0, y = 0.2, width = 0.6, height = 0.4) +
+  draw_plot(Hist_Rev, x = 0.57, y = 0.19, width = 0.3, height = 0.4) +
+  # Legends
+  draw_plot(legend_map, x = 0, y = 0.1, width = 0.59, height = 0.1) +
+  draw_plot(legend_hist, x = 0.60, y = 0.1, width = 0.3, height = 0.1) +
+  # Labeks
+  draw_plot_label(label = c("A", "B", "C"), 
+                  size = 30,
+                  x = c(0.0, 0.0, 0.56), 
+                  y = c(1, 0.6, 1)
+  ) +
+  # Uncomment for latitudinal version 
+  draw_plot_label(label = c("Revenue", "Biomass"),
+                  size = 40,
+                  x = c(0.91, 0.91),
+                  y = c(0.50, 1),
+                  angle = 270,
+                  colour = "black"
+  )
+
+# Path and name for submission
+# Save plot 
+save_plot("./data/Global Paper/Submission/Figures/Figure3.png",
+          plot,
+          base_height = 15,
+          base_width = 20
+          )
+
+
+```
+
+# 6. Paper Statistics
+
+We are going to determine the statistical significance of changes between the models (fish/mpa) and time frames (present/future) using a t.test or Wilcox test.
+
+## 6.1 Test assumptions
+
+First we tested for normality by estimating the data skewness and kurtosis. Results show that our results are highly skewed with a sharp peak. Hence we carried out a non-parametric tests.
+
+```{r Test_for_normallity, eval = T, echo = F}
+
+Stats_Data <- All_Models %>% 
+  spread("Model","total") %>% 
+  mutate(INDEX = as.character(INDEX),
+         MPA = ifelse(is.na(MPA), 0, MPA),
+         Fish = ifelse(is.na(Fish), 0, Fish)
+  ) %>% 
+  left_join(MPA_Grid,
+            by= "INDEX") %>%  # 1 mpa ; 2 touching
+  filter(RCP == 85,
+         Measure == "Mean",
+         ! Data_Type %in% c("flexibility","nonuse_value"),
+         !is.na(Touching)
+  )
+
+### Data Histogram
+
+# Fish Model (Not-Normall distribution)
+Stats_Data %>% 
+  ggplot() +
+  geom_histogram(
+    aes(
+     Fish
+    ),
+    binwidth = 50
+  ) +
+  facet_wrap(~Touching)
+
+
+# MPA Model (Not-Normall distribution)
+Stats_Data %>% 
+  ggplot() +
+  geom_histogram(
+    aes(
+     MPA
+    ),
+    binwidth = 50
+  ) +
+  facet_wrap(~Touching)
+
+### Skewness and  Kurtosis
+# S = 0, Perfect; 0-0.5 aprox; 0.5-1 moderate skew; > 5 very skewed
+
+# For MPA (Most of them skewed)
+Stats_Data %>% 
+  filter(time_period == "Mid Century") %>% 
+  group_by(time_period,
+           Data_Type,
+           Touching) %>% 
+  # Uses broom to estimate sig.dif with wilcox for each group_by
+  do(Skew = skewness(.$MPA)
+  ) %>% 
+  tidy(Skew)
+
+
+# For Fish (Most of them skewed)
+Stats_Data %>% 
+  filter(time_period == "Mid Century") %>% 
+  group_by(time_period,
+           Data_Type,
+           Touching) %>% 
+  # Uses broom to estimate sig.dif with wilcox for each group_by
+  do(Skew = skewness(.$Fish)
+  ) %>% 
+  tidy(Skew)
+
+# K = 3 stndr normal dist; k > 3 sharper peak High K; k < 3 flatter peak low K
+
+# For MPA (All of them leptokurtic)
+Stats_Data %>% 
+  filter(time_period == "Mid Century") %>% 
+  group_by(time_period,
+           Data_Type,
+           Touching) %>% 
+  # Uses broom to estimate sig.dif with wilcox for each group_by
+  do(Kurt = kurtosis(.$MPA)
+  ) %>% 
+  tidy(Kurt)
+
+
+# For Fish (All of them leptokurtic)
+Stats_Data %>% 
+  filter(time_period == "Mid Century") %>% 
+  group_by(time_period,
+           Data_Type,
+           Touching) %>% 
+  # Uses broom to estimate sig.dif with wilcox for each group_by
+  do(Kurt = kurtosis(.$Fish)
+  ) %>% 
+  tidy(Kurt)
+
+### Test for Normality (qqnorm)
+# Fish Model
+
+qqnorm(Stats_Data$Fish) # Not really normally dist.
+# MPA Model
+qqnorm(Stats_Data$MPA) # Not really normally dist.
+
+```
+
+## 6.2 Comparisons between time-periods
+
+Wilcox-on test to compare between time periods 
+
+```{r stats_results_time, eval = T, echo = F}
+
+Delta_Time_Stats <- All_Models %>% 
+  spread(time_period,total) %>% 
+  left_join(MPA_Grid,
+            by = "INDEX") %>% 
+  mutate(
+    Region = ifelse(Touching==2, "Surrounding",
+                    ifelse(Touching==1, "MPA",
+                           NA)
+    )
+  ) %>%
+  filter(
+    !is.na(Region),
+    Measure == "Mean",
+    Model == "MPA",
+    Data_Type %in% c("Abd")
+  ) %>% 
+  gather("time_period","Abd",`End of Century`:`Mid Century`) %>% 
+  group_by(time_period,
+           Region,
+           RCP
+  ) %>% 
+  # Uses broom to estimate sig.dif with wilcox for each group_by
+  do(Wilcox = wilcox.test(.$Today, .$Abd)) %>% 
+  tidy(Wilcox) %>% #Tim doesn't like the "Sig" column
+  mutate(Sig = ifelse(p.value > 0.05,"No","Yes"))
+
+# head(Delta_Time_Stats)
+
+write.csv(Delta_Time_Stats,
+          "/nfs/mpasandclimatechange-data/Global Paper/Paper_Results/Delta_Time_Stats.csv",
+          row.names = F)
+
+```
+
+## 6.3 Estimate how far spillover goes
+
+In here we estimated how far from the border of the MPA the spillover was significantly different than when no MPA was placed
+
+```{r spillover_distance, eval = T, echo = F}
+
+Spillover_Stats_Data <- All_Models %>% 
+  spread("Model","total") %>% 
+  mutate(#INDEX = as.character(INDEX),
+    MPA = ifelse(is.na(MPA), 0, MPA), # I believe there are parts that MPA model does not have?
+    Fish = ifelse(is.na(Fish), 0, Fish)
+  ) %>% 
+  left_join(MPA_Grid,
+            by= "INDEX") %>%  # 1 mpa ; 2 touching
+  filter(RCP == 85,
+         Measure == "Mean",
+         ! Data_Type %in% c("flexibility","nonuse_value"),
+         !is.na(Touching)
+  ) %>% 
+  mutate(Bins = cut(Distance,breaks = 9)) %>%
+  group_by(time_period,
+           Data_Type,
+           Bins
+  ) %>% 
+  do(Wilcox = wilcox.test(.$Fish, .$MPA)) %>% 
+  tidy(Wilcox) %>% 
+  mutate(Sig = ifelse(p.value > 0.05,"No","Yes")) %>% 
+  arrange(desc(Sig))
+  
+# Check if these cells are anywhere outside the "touching cells" (Yes!!!)
+
+Results_Data %>% 
+  filter(Distance < 7.5) %>% 
+  pull(Touching_b) %>% 
+  unique()
+
+
+### So... what's the Max value change? 
+# Per 25 seems to be fine...
+
+# head(Results_Data)
+
+Results_Data %>% 
+  filter(Distance < 7.5) %>%  
+  ggplot() +
+  geom_histogram(
+    aes(x = Diff_Models),
+    bins = 100
+  )+
+  facet_wrap(~Data_Type+time_period+Touching_b) 
+
+# Cumulative distribution of data Mid century
+
+CD_Mid <- Results_Data %>% 
+  filter(Distance < 7.5,
+         Data_Type == "Abundance",
+         time_period == "Mid Century",
+         Touching_b == "Open")
+
+unique(CD_Mid$Touching_b)
+
+# Most gridcells are between 0 and around 25%
+plot(ecdf(CD_Mid$Diff_Models))
+
+```
+
+## 6.4 Comparisons between models
+
+In here we compared the differences in abundance and MCP between the fish and MPA models to see if they perform differently under climate change
+
+```{r stats_results_models, eval = T, echo = F}
+
+Stats_Data <- All_Models %>% 
+  spread("Model","total") %>% 
+  left_join(MPA_Grid,
+            by= "INDEX") %>%  # 1 mpa ; 2 touching
+  filter(Measure == "Mean",
+         ! Data_Type %in% c("flexibility","nonuse_value"),
+         !is.na(Touching),
+         RCP == 85
+  ) %>% 
+  # Note; change the Distance filter to incorporate the non-sig to the discussion
+  mutate(Region = ifelse(Touching == 0 & Distance <= 7.5,"Unprotected", # to find non-sig. 
+                         ifelse(Touching == 1, "MPA",
+                                ifelse(Touching == 2, "Surrounding", NA
+                                )
+                         )
+  )
+  ) %>% 
+  group_by(time_period,
+           Data_Type,
+           Region
+  ) %>% 
+  # Uses broom to estimate sig.dif with wilcox for each group_by
+  do(Wilcox = wilcox.test(.$Fish, .$MPA)) %>% 
+  tidy(Wilcox) %>% #Tim doesn't like the "Sig" column
+  mutate(Sig = ifelse(p.value > 0.05,"No","Yes"))
+
+write.csv(Stats_Data,
+          "/nfs/mpasandclimatechange-data/Global Paper/Paper_Results/Stats_Data_models.csv",
+          row.names = F)
+
+
+Stats_Data %>% 
+  # gather("Model","total",Fish:MPA) %>% 
+  filter(
+    time_period == "Mid Century",
+    Data_Type == "Abd",
+    RCP == 85,
+    Measure == "Mean"
+  ) %>% 
+  ggplot() +
+  geom_tile(
+    aes(
+      x = Longitude,
+      y = Latitude,
+      fill = MPA
+    )
+  )
+
+```
+
+## 6.5 Latitudinal relation
+
+```{r latitudinal_spillover, eval = T, echo = T}
+
+# Abundance LM MPA
+
+LM_Data_MPA <- Results_Data %>% 
+  mutate(Abs_Latitude = abs(Latitude)) %>% 
+  filter(
+    Data_Type == "Abundance",
+    Measure == "Mean",
+    Touching_b == "MPA",
+    time_period == "Mid Century",
+    RCP == 85,
+    Diff_Models != 0)
+
+LM_MPA  <- lm(LM_Data_MPA$Abs_Latitude~LM_Data_MPA$Diff_Models)
+summary(LM_MPA)
+
+plot(LM_Data$Abs_Latitude~LM_Data$Diff_Models)
+
+
+# Abundance LM Touching
+
+LM_Data_Abd <- Results_Data %>% 
+  mutate(Abs_Latitude = abs(Latitude)) %>% 
+  filter(
+    Data_Type == "Abundance",
+    Measure == "Mean",
+    Touching_b == "Touching",
+    time_period == "Mid Century",
+    RCP == 85,
+    Diff_Models != 0)
+
+LM_Abd_T  <- lm(LM_Data_Abd$Abs_Latitude~LM_Data_Abd$Diff_Models)
+summary(LM_Abd_T)
+
+plot(LM_Data_Abd$Abs_Latitude~LM_Data_Abd$Diff_Models)
+
+
+# Revenue LM
+
+LM_Data_Rev <- Results_Data %>% 
+  mutate(Abs_Latitude = abs(Latitude)) %>% 
+  filter(
+    Data_Type == "Revenue",
+    Measure == "Mean",
+    Touching_b == "Touching",
+    time_period == "Mid Century",
+    RCP == 85,
+    Diff_Models != 0)
+
+LM_Rev  <- lm(LM_Data_Rev$Abs_Latitude~LM_Data_Rev$Diff_Models)
+summary(LM_Rev)
+
+plot(LM_Data_Rev$Abs_Latitude~LM_Data_Rev$Diff_Models)
+
+
+# Abundance LM Oppen
+
+LM_Data_Open <- Results_Data %>% 
+  mutate(Abs_Latitude = abs(Latitude)) %>% 
+  filter(
+    Data_Type == "Abundance",
+    Measure == "Mean",
+    Touching_b == "Open",
+    time_period == "Mid Century",
+    RCP == 85,
+    Diff_Models != 0)
+
+LM_One_Open  <- lm(LM_Data_Open$Abs_Latitude~LM_Data_Open$Diff_Models)
+summary(LM_One_Open)
+
+plot(LM_Data_Open$Abs_Latitude~LM_Data_Open$Diff_Models)
+
+
+# Da fuuuuuuuck is wrong with those 0's
+
+LM_Data <- Results_Data %>% 
+  mutate(Abs_Latitude = abs(Latitude)) %>% 
+  filter(
+    Data_Type == "Abundance",
+    Measure == "Mean",
+    # Touching_b == "MPA",
+    time_period == "Mid Century",
+    RCP == 85,
+    Diff_Models == 0)
+
+```
+
+## 6.6 Mean and SD stats 
+
+Averages and s.d. for the results section
+
+```{r stats_mean_change, eval = F, echo = F}
+
+#tropical MPAs vs Polar 
+Region_dat <- Delta_Time %>% 
+  filter(Model == "MPA") %>% 
+  mutate(
+    Geo_Region = ifelse(Latitude >= 66.5, "Polar_N", # If MPA and Fish are cero, then no change
+                        ifelse(Latitude >= 23.5 & Latitude < 66.5, "Sub_Trop_N", # If MPA is cero but Fish >0 then -100 
+                               ifelse(Latitude >= -23.5 & Latitude < 23.5, "Tropical", # If MPA > 0 but Fish = 0, then +100
+                                      ifelse(Latitude <= -23.5 & Latitude > -66.5, "Sub_Trop_S", # If MPA is cero but Fish >0 then -100 
+                                             "Polar_S")
+                               )
+                        )
+    )
+  )
+
+
+Non_tropicalMPA_dat = Region_dat%>% filter(Model == "MPA", Data_Type == "Abd",  Touching == 1, Geo_Region!="Tropical", time_period == "Mid Century", RCP==85)
+
+mean(Non_tropicalMPA_dat$MCP_Chng)
+sd(Non_tropicalMPA_dat$MCP_Chng)
+
+Non_tropicalMPA_dat = Region_dat%>% filter(Model == "MPA", Data_Type == "Abd",  Touching == 1, Geo_Region!="Tropical", time_period == "End of Century", RCP==85)
+
+mean(Non_tropicalMPA_dat$MCP_Chng)
+sd(Non_tropicalMPA_dat$MCP_Chng)
+
+#tropical 
+tropicalMPA_dat = Region_dat%>% filter(Model == "MPA", Data_Type == "Abd",  Touching == 1, Geo_Region=="Tropical", time_period == "Mid Century", RCP==85)
+
+mean(tropicalMPA_dat$MCP_Chng)
+sd(tropicalMPA_dat$MCP_Chng)
+
+tropicalMPA_dat = Region_dat%>% filter(Model == "MPA", Data_Type == "Abd",  Touching == 1, Geo_Region=="Tropical", time_period == "End of Century", RCP==85)
+
+mean(tropicalMPA_dat$MCP_Chng)
+sd(tropicalMPA_dat$MCP_Chng)
+
+#high vs low RCP
+tropicalMPA_dat = Region_dat%>% filter(Model == "MPA", Data_Type == "Abd",  Touching == 1, Geo_Region=="Tropical", time_period == "End of Century", RCP==26)
+
+mean(tropicalMPA_dat$MCP_Chng)
+sd(tropicalMPA_dat$MCP_Chng)
+
+Non_tropicalMPA_dat = Region_dat%>% filter(Model == "MPA", Data_Type == "Abd",  Touching == 1, Geo_Region!="Tropical", time_period == "End of Century", RCP==26)
+
+mean(Non_tropicalMPA_dat$MCP_Chng)
+sd(Non_tropicalMPA_dat$MCP_Chng)
+
+# head(Delta_Time)
+# max(Delta_Time$Per)
+# min(Delta_Time$Per)
+
+
+#min and max change in biomass 
+data <- Delta_Time %>% filter(Model == "MPA", Data_Type == "Abd",  Touching == 1 | Touching == 2)
+
+mean(data$MCP_Chng)
+sd(data$MCP_Chng)
+max(data$MCP_Chng)
+min(data$MCP_Chng)
+
+
+touchingpositivedata = Delta_Time %>% filter (Model == "MPA", Data_Type == "Abd", Per > 0, Touching == 2, RCP == 85, time_period == "End of Century")
+
+MPApositivedata = Delta_Time %>% filter(Model == "MPA", Data_Type == "Abd", Per > 0, Touching == 1, RCP == 85, time_period == "End of Century")
+
+Openpositivedata = Delta_Time %>% filter(Model == "MPA", Data_Type == "Abd", Per > 0, Touching == 0 & RCP == 85, time_period == "End of Century")
+
+mean(touchingpositivedata$MCP_Chng)
+sd(touchingpositivedata$MCP_Chng)
+
+mean(MPApositivedata$MCP_Chng)
+sd(MPApositivedata$MCP_Chng)
+
+mean(Openpositivedata$MCP_Chng)
+sd(Openpositivedata$MCP_Chng)
+
+#touching vs MPA total 
+touchingpositivedata = Delta_Time %>% filter (Model == "MPA", Data_Type == "Abd", Touching == 2, RCP == 85, time_period == "End of Century")
+
+MPApositivedata = Delta_Time %>% filter(Model == "MPA", Data_Type == "Abd", Touching == 1, RCP == 85, time_period == "End of Century")
+
+Openpositivedata = Delta_Time %>% filter(Model == "MPA", Data_Type == "Abd", Touching == 0 & RCP == 85, time_period == "End of Century")
+
+mean(touchingpositivedata$MCP_Chng)
+sd(touchingpositivedata$MCP_Chng)
+
+mean(MPApositivedata$MCP_Chng)
+sd(MPApositivedata$MCP_Chng)
+
+mean(Openpositivedata$MCP_Chng)
+sd(Openpositivedata$MCP_Chng)
+
+#comparing models
+
+sumy_models <- Results_Data %>% 
+  group_by(time_period, Data_Type, RCP, Touching) %>%
+  summarize(MEAN_fish=mean(Fish), SD_fish=sd(Fish), Mean_MPA = mean(MPA), SD_MPA = sd(MPA))
+
+```
+
+# 7 Sensitivity Analysis
+
+We need to test the sensitivity of the larvae fix parameters of the DBEM. There are three main components:
+
+- *DiffCoef*, which talks about each species diffusion rate, 
+- *LarSurv* = 0.15, determines the larval survival,
+- *rLarSettle* = 0.15, determines the larval settlement rate
+
+We will run the DBEM in compu-Canada 4 times (2 increasing and 2 decreasing) for each variable and model (Fish and MPA), for a total of 40 random species using the GFDL85 from 1995 to 2014 (today) as follows:
+
+- *DiffCoef*, -0.10; -0.20; +0.10; +0.20
+- *LarSurv* = 0.15, 0.5; 0.10; 0.20; 0.25
+- *rLarSettle* = 0.15, 0.5; 0.10; 0.20; 0.25
+
+At the end we can produce histograms and to see if there are differences between variables.
+
+## 7.1 Choosing the species
+
+```{r Choose_Species, eval = F, echo = F}
+
+# Functions needed to get species
+
+source(here::here("DBEM/Functions_Paper2/Get_Spp_Grid.r")) # Chagos grid for species there
+source("./DBEM/Functions/DBEM_imp_F.r") # Imports a single species
+
+# Data needed to get species
+Chagos_Grid <- fread("/nfs/mpasandclimatechange-data/Data/MPA/grid_MPA_touching.csv",header = TRUE) %>%
+  filter(NAME == "British Indian Ocean Territory Marine Protected Area (Chagos)") %>% 
+  rename(INDEX = Seq) %>% 
+  select(INDEX, NAME)
+
+# Get taxon list from what we've modeled so far
+Taxon_List <- inner_join(mpa_model_species, fish_model_species) %>% pull(x)
+
+# Get species list for sensitivity analysis using the GFDL 26
+
+# Global Variables
+RCP = "26"
+Model <- "Fish"
+Initial_Y = 1995
+Final_Y = 2014
+GCM = "GFDL26"
+# Run function Get_Spp_Grid
+sensitivity_spp <- bind_rows(lapply(Taxon_List, FUN=Get_Spp_Grid, Chagos_Grid))
+
+
+selected_sensitivity_spp <- slice(sensitivity_spp, sample(1:40)) %>% 
+  select(TaxonKey)
+
+readr::write_csv(selected_sensitivity_spp,
+          "RunSppListSen10.txt")
+sample(c(0,1), 100, replace = TRUE)
+
+# Send RunSppListSen10.txt to computeCanada over terminal
+
+```
+
+## 7.2 Sensitivity Results
+
+```{r Sens_Results, eval = F, echo = F}
+
+# Load Data need
+MPA_Grid <- fread("/nfs/mpasandclimatechange-data/Data/MPA/grid_MPA_touching.csv",header = TRUE) %>% 
+  # filter(NAME == "British Indian Ocean Territory Marine Protected Area (Chagos)") %>% 
+  rename(INDEX = Seq) %>% 
+  select(INDEX, NAME,Touching)
+
+# Load Sensitivity analysis data
+Fish_Sen <- fread("/nfs/mpasandclimatechange-data/Data/Results/Sensitivity/Sensitivity_Fish.csv")
+
+mean(Fish_Sen$total)
+max(Fish_Sen$total)
+
+
+MPA_Sen <- fread("/nfs/mpasandclimatechange-data/Data/Results/Sensitivity/Sensitivity_MPA.csv")
+
+max(MPA_Sen$total)
+mean(MPA_Sen$total)
+
+
+# Estimate the percentage change
+
+Sens_PerChange <- Sen_Data %>% 
+  filter(
+    Data_Type %in% c("Abd"),
+    Measure == "Mean"
+  ) %>% 
+  select(-n) %>% 
+  spread("Model","total") %>% 
+  mutate(
+    MPA = ifelse(is.na(MPA), 0, MPA), # I believe there are parts that MPA model does not have?
+    Fish = ifelse(is.na(Fish), 0, Fish),
+    Diff_Models = ifelse(MPA == 0 & Fish == 0, 0, # If MPA and Fish are cero, then no change
+                         ifelse(MPA == 0 & Fish > 0, -100, # If MPA is cero but Fish >0 then -100 
+                                ifelse(MPA > 0 & Fish == 0, 100, # If MPA > 0 but Fish = 0, then +100
+                                       ((MPA-Fish)/((MPA+Fish)/2))*100
+                                )
+                         )
+    ),
+    # Just to set the percentage bounds
+    Per = ifelse(Diff_Models <= -25, -25,
+                 ifelse(Diff_Models >= 25, 25,Diff_Models)
+    ),
+    # For plot labels
+    # Data_Type = ifelse(Data_Type == "Abd","Biomass","Revenue")
+  ) %>% 
+  left_join(MPA_Grid,
+            by = "INDEX") %>% 
+  mutate(
+    Touching_b = ifelse(Touching == 0,"Unprotected",
+                        ifelse(Touching == 1, "MPA",
+                               ifelse(Touching == 2, "Surrounding",
+                                      NA
+                               )
+                        )
+    )
+  )
+
+
+
+
+
+max(Sens_PerChange$Diff_Models)
+min(Sens_PerChange$Diff_Models)
+```
+
+## 7.3 Sensitivity Figures
+
+```{r Sens_Figures, eval = F, echo = F}
+
+Sens_PerChange %>% 
+  filter(Touching == 2 & Per > 0 & Per < 25) %>% 
+  ungroup() %>% 
+  mutate(
+    Sen =  ifelse(Sen == "Sur","Survival",
+                  ifelse(Sen == "Set","Settlement","Diffusion")
+                  )
+  ) %>% 
+  ggplot() +
+  geom_histogram(
+    aes(
+      x = Per
+    ),
+    bins = 100
+  ) +
+  facet_wrap(~Sen+Coef,
+             scales = "free") +
+  labs(x = "Differences between models (%)",
+       y = "Frequency") +
+  ggtheme_Plot()
+
+ ggsave(
+    plot = last_plot(),
+    width = 14,
+    height = 10,
+    units = "in",
+    # filename = "larvae_sensitivity.png",
+    # path=  "./data/Data/Results/Sensitivity"
+    # Info for final plots 
+    filename ="Figure4.png",
+    path = "/nfs/mpasandclimatechange-data/Global Paper/Submission_NCC/Figures/"
+  )
+
+
+```
+
+# 8. Supplemental material
+
+## Fig S1.Delta time for all
+
+Fig S1. Change in biomass under climate change, incorporating current no-take MPAs.** Results for mid (2041-2060) and end (2081-2099) century in reference to present (1995-2014) under a low (RCP 2.6) and high emission scenario (RCP 8.5). Results from the MPA model with MPAs included in this study outlined in black.
+
+
+```{r Fig_sone_plot, eval = T, echo = F}
+
+# Do not subset RCP nor timeframe 
+
+ggplot() +
+  geom_tile(data = subset(Delta_Time, Model == "MPA" & Data_Type == "Abd" ),
+            aes(
+              x = Longitude,
+              y = Latitude,
+              fill = Per
+            )
+  ) +
+  geom_sf(data = World_Land_sf, colour = "grey50", fill = "grey50") +
+  geom_sf(data = MPA_sf, colour = "black", fill = NA, size = 0.5) +
+  scale_fill_gradient2("Percentage Change in Biomass (%)",
+                       labels = c("<-25",seq(-20,20,5),">25"),
+                       breaks = c(seq(-25,25,5)),
+                       na.value = "grey90"
+  ) +
+  ggtheme_Map() +
+  guides(fill = guide_legend(title.position = "top",
+                             label.position = "bottom",
+                             title.hjust = 0.5,
+                             nrow = 1,
+                             byrow = TRUE)
+  ) +
+  facet_wrap(~time_period + RCP,
+             ncol= 2) +
+  ggsave(
+    width = 12,
+    height = 7,
+    units = "in",
+    filename = "FigureS1.png",
+    path= "./data/Global Paper/Submission/Figures"
+  )
+
+```
+
+## Fig S2 - Supplemental
+
+This is the same figure as Figure 2. But for the end of the century
+
+```{r Fig_S2_Supplemental, eval = T, echo = F}
+
+# --------------------- #
+# Create maps (A and B)
+# --------------------- #
+
+# Abundance Map
+Map_Abd <- ggplot() +
+  geom_raster(data = subset(Results_Data, Data_Type == "Biomass" & time_period == "End of Century"),
+              aes(
+                x = Longitude,
+                y = Latitude,
+                fill = Per
+              )
+  ) +
+  geom_sf(data = World_Land_sf, colour = "grey50", fill = "grey50") +
+  scale_fill_gradient2("Change relative to present (%)",
+                       labels = c("<-25",seq(-20,20,5),">25"),
+                       breaks = c(seq(-25,25,5)),
+                       na.value = "grey90"
+                       ) +
+  ggtheme_Map() +
+  theme(legend.position = "")
+  
+
+# Revenue Map
+Map_Rev <- ggplot() +
+  geom_tile(data = subset(Results_Data, Data_Type == "Revenue" & time_period == "End of Century"),
+              aes(
+                x = Longitude,
+                y = Latitude,
+                fill = Per
+              )
+  ) +
+  geom_sf(data = World_Land_sf, colour = "grey50", fill = "grey50") +
+  geom_sf(data = MPA_sf, colour = "grey50", fill = "grey50", size = 0.5) +
+  scale_fill_gradient2("Differences between models (%)",
+                       labels = c("<-25",seq(-20,20,5),">25"),
+                       breaks = c(seq(-25,25,5)),
+                       na.value = "grey90"
+                       ) +
+  ggtheme_Map() +
+  guides(fill = guide_legend(title.position = "top",
+                             label.position = "bottom",
+                             title.hjust = 0.5,
+                             nrow = 1,
+                             byrow = TRUE)
+  )
+
+# Get legend for cowplot
+legend_map <- get_legend(Map_Rev)
+
+# Re-plot without legend
+Map_Rev <- Map_Rev +
+  theme(legend.position = "")
+
+# --------------------- #
+# Create histograms (C)
+# --------------------- #
+
+# Abundance Histogram (No Latitudinal differentiation)
+
+Hist_Abd <- ggplot() + 
+  geom_path(data = subset(Spillover_diff_Lat, Data_Type == "Biomass" & time_period == "End of Century"), 
+            aes(y=Latitude, 
+                x=total_value, 
+                color=Touching_b),
+            size = 1) +
+  geom_path(data = subset(Spillover_diff_Lat_1, Data_Type == "Biomass" & time_period == "End of Century"),
+            aes(y=Latitude, 
+                x=total_value, 
+                color = "Total"),
+            size = 1
+            ) +
+  scale_color_manual(values = wes_palette("Darjeeling2")) +
+  scale_x_continuous(breaks = 0) +
+  # scale_color_manual(values=c("dodgerblue3", "firebrick3", "black", "seagreen3"))+
+  ggtheme_Plot() +
+  labs(x = "",
+       y = "") +
+  theme(
+  axis.text.y = element_blank(),
+  legend.position = "",
+  legend.key.width = unit(2,"line"),
+  legend.title = element_text(size = 22),
+  legend.text = element_text(size = 20)
+  ) +
+  geom_vline(xintercept = 0, colour = "black", linetype = "dotted") 
+
+
+Hist_Rev <- ggplot() + 
+  geom_path(data = subset(Spillover_diff_Lat, Data_Type == "Revenue" & time_period == "End of Century"), 
+            aes(y=Latitude, 
+                x=total_value, 
+                color=Touching_b),
+            size = 1)  +
+  geom_path(data = subset(Spillover_diff_Lat_1, Data_Type == "Revenue" & time_period == "End of Century"),
+            aes(y=Latitude, 
+                x=total_value, 
+                color = "Total"), 
+            # linetype = "dotted",
+            size = 1) +
+  geom_vline(xintercept = 0, colour = "black",linetype = "dotted") +
+  scale_color_manual("Spillover effect by latitude",
+                     values = wes_palette("Darjeeling2")
+  ) +
+  scale_x_continuous(breaks = 0) +
+  # scale_color_manual(values=c("dodgerblue3",
+  #                             "firebrick3",
+  #                             "black",
+  # "seagreen3"))+
+  ggtheme_Plot() +
+  labs(x = "",
+       y = "") +
+  theme(
+    axis.text.y = element_blank(),
+    legend.position = "bottom",
+    legend.title = element_text(size = 22),
+    legend.text = element_text(size = 20)
+  ) +
+  guides(color = guide_legend(title.position = "top",
+                              label.position = "right",
+                              title.hjust = 0.5,
+                              nrow = 1,
+                              byrow = TRUE)
+  )
+
+# Get legend for cowplot
+legend_hist <- get_legend(Hist_Rev)
+
+# Re-plot without legend
+Hist_Rev <- Hist_Rev +
+  theme(legend.position = "")
+
+# --------------------- #
+# Plot them all
+# --------------------- #
+
+plot <- ggdraw() +
+  # Abundance
+  draw_plot(Map_Abd, x = 0, y = 0.6, width = 0.6, height = 0.4) +
+  draw_plot(Hist_Abd, x = 0.59, y = 0.59, width = 0.3, height = 0.4) +
+  # Revenue
+  draw_plot(Map_Rev, x = 0, y = 0.2, width = 0.6, height = 0.4) +
+  draw_plot(Hist_Rev, x = 0.57, y = 0.19, width = 0.3, height = 0.4) +
+  # Legends
+  draw_plot(legend_map, x = 0, y = 0.1, width = 0.59, height = 0.1) +
+  draw_plot(legend_hist, x = 0.60, y = 0.1, width = 0.3, height = 0.1) +
+  # Labeks
+  draw_plot_label(label = c("A", "B", "C"), 
+                  size = 30,
+                  x = c(0.0, 0.0, 0.56), 
+                  y = c(1, 0.6, 1)
+  ) +
+  # Uncomment for latitudinal version 
+  draw_plot_label(label = c("Revenue", "Abundance"),
+                  size = 40,
+                  x = c(0.91, 0.91),
+                  y = c(0.50, 1),
+                  angle = 270,
+                  colour = "black"
+  )
+
+# Path and name for submission
+# Save plot 
+save_plot("./data/Global Paper/Submission/Figures/FigureS2.png",
+          plot,
+          base_height = 15,
+          base_width = 20)
+
+```

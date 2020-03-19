@@ -1,0 +1,336 @@
+---
+title: Marine Protected Areas Can Reduce Localized Losses to Fisheries Under Climate Change
+author: 
+- Juliano Palacios-Abrantes*^1^, Sarah M. Roberts^2^, Tim Cashion^3^, Talya ten Brink^4^,
+- William W.L. Cheung^1^, Anne Mook^5^ and Tu Nguyen^6^
+date: |
+ ^1^Changing Ocean Research Unit, Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, BC, Canada
+ ^2^Marine Geospatial Ecology Lab, Nicholas School of the Environment and Earth Sciences, Duke University, Durham, NC, USA
+ ^3^Fisheries Economics Research Unit, Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, BC, Canada
+ ^4^Department of Marine Affairs, University of Rhode Island, Kingston, RI, USA
+ ^5^Department of International Studies, American University of Sharjah, Sharjah, United Arab Emirates
+ ^6^Department of Applied Economics, Oregon State University, Corvallis, OR, USA"
+output:
+  word_document:
+    reference_docx: /nfs/mpasandclimatechange-data/Global Paper/SR_Template.doc
+bibliography: /nfs/mpasandclimatechange-data/Global Paper/Global_paper_ref.bib
+csl: /nfs/mpasandclimatechange-data/Global Paper/science.csl
+header-includes:
+   - \usepackage{lineno}
+   - \linenumbers{\normalsize}
+   - \usepackage{setspace}
+   - \doublespacing
+---
+
+* Corresponding author: j.palacios@ocenas.ubc.ca
+
+```{r setup, eval = t, echo = F, warning=F,message=F, results='hide'}
+
+#### Set up packages ####
+
+ipak <- function(pkg){
+  new.pkg <- pkg[!(pkg %in% installed.packages()[, "Package"])]
+  if (length(new.pkg)) 
+    install.packages(new.pkg, dependencies = TRUE)
+  sapply(pkg, require, character.only = TRUE)
+}
+
+packages <- c(
+  "png",
+  "here",
+  "tidyverse",
+  "knitr",
+  "kableExtra",
+  "grid"
+)
+
+ipak(packages)
+
+Results_Folder <- "/nfs/mpasandclimatechange-data/Global Paper/Submission_NCC/Figures/"
+options("scipen"=100, "digits"=4) 
+```
+
+# Abstract
+
+Marine ecosystems face many threats including overfishing and climate change. Marine protected areas (MPAs) are often advocated for their ability to protect and re-establish healthy ecosystems, especially from fisheries. However, their purported benefits, including increased biomass within the protected area and fisheries revenue in the form of spillover, may be threatened by climate change. Here, we evaluate whether MPAs will continue to provide biomass and fishing benefits under climate change. We undertake this analysis by modifying an existing species distribution model to account for the effects of fishing closures from MPAs. We find that fish stocks in MPAs will still experience the negative effects of climate change, however MPAs can mitigate regional losses in stock biomass and revenue when compared to a scenario without MPAs. While the benefits from MPAs will significantly increase with higher latitudes, tropical MPAs will still be able to provide significant benefits, even under a high emission scenario.
+
+# Introduction
+
+Marine species commonly respond to climate change by moving poleward, deeper to colder waters [@Poloczanska:2016kk], or following temperature gradients [@Pinsky:2013jo], compromising both conservation and fisheries management objectives as spatial regulatory tools are not designed with shifting species ranges in mind [@FredstonHermann:2018kp]. The effectiveness of marine protected areas (MPAs) is thus directly threatened by the effects of climate change as most MPAs are located in regions experiencing increased warming [@Bruno:2018cs]. However, such a threat has yet to be assessed in terms of biodiversity and fisheries loss. This paper informs the management of current MPAs and the establishment of future MPAs under a changing climate and species on the move.
+
+Regulatory spatial boundaries are a fundamental component of marine resource management, and MPAs are among the most popular tools for conservation [@Song:2017iua]. MPAs can be fully or partially no-take and, when effective, can help increase population biomass [@Friedlander:2017bt; @Chirico:2017dfa], density [@Chirico:2017dfa], resilience [@Micheli:2012he], individual size [@Chirico:2017dfa; @Micheli:2012he], and species diversity within MPA boundaries [@Chirico:2017dfa; @Halpern:2002fe; @Halpern:2003uz; @Gell:2003ko; @Micheli:2004fp]. Such effects can lead to spillover of adult fish biomass in waters up to 150 kilometers away [@Tremain:2004ul], in some cases increasing fish yield [@Halpern:2010kj]. However, most MPAs are static in nature and they represent a fixed area in the ocean with invisible borders [@Bruno:2018cs]. Thus, as climate change shifts the distribution of marine species worldwide, the question of whether MPAs will remain effective in terms of fish biomass and potential economic benefits from fisheries remains unanswered. 
+
+Here, we follow a modeling approach to project the biomass and catch at maximum sustainable yield (hereafter referred to as Maximum Catch Potential, MCP) of 963 marine species worldwide [@Cheung:2016jd]. We use the outputs of three Earth System Models to simulate climate change under two future scenarios (high and low mitigation) [@IPCC:2019to]. Furthermore, to evaluate the impacts in terms of fish biomass and revenue from fisheries under climate change, we run the models for two global scenarios at a $0.5^o$ latitude by $0.5^o$ longitude grid cell resolution, one with the current distribution of 596 no-take MPAs and one without MPAs (hereafter referred to as the MPA model and no-MPA model, respectively). The benefits are measured as percentage change $\pm$ one standard deviation (s.d.) in cells containing MPAs, in surrounding waters (areas adjacent to the MPA), and unprotected waters (areas outside of surrounding waters). We acknowledge that the benefits of MPAs are context and factor dependent (e.g. level of enforcement, size of protected area, time of establishment) [@Edgar:2014fia], for the purpose of this research we assumed that all MPAs are well managed, thus, providing benefits accordingly.
+
+# Results
+
+Projections from the MPA model suggest that many of the current no-take MPAs are in areas that will experience major changes in biomass under climate change - specifically the poles and tropics (Fig. 1). MPAs such as Chagos Protected Area in the Indian Ocean and the Papahānaumokuākea Marine National Monument in the North Pacific are in regions expected to lose over 25% of fish biomass under a high emissions scenario by the mid 21st century (Tropical MPAs are expected to decrease in biomass by -6.78 $\pm$ 11.88% at the mid $21^{st}$ century and decrease by -40 $\pm$ 46.51% by the end of the $21^{st}$ century under RCP 8.5). In contrast, as species shift their distributions poleward [@Poloczanska:2016kk; @Jones:2014gu; @GarciaMolinos:2015fk], most MPAs outside of the tropics are expected to see an increase in biomass (30 $\pm$ 41.87% by mid $21^{st}$ century and 10 $\pm$ 58.39% by the end of the $21^{st}$ century, under RCP 8.5). For example, within  the Ross Sea Protected Area in Antarctica and the South-West Corner Commonwealth Marine Reserve, biomass is projected to increase by over 25%. Towards the end of the 21st century, changes in biomass in the regions mentioned above will intensify under the high emission scenario while less of a change is expected under the low emission scenario (tropical MPAs at end of century under RCP 8.5 will lose -40 $\pm$ 46.51% in terms of biomass compared to under RCP 2.6 where losses are estimated at -3.11 $\pm$ 6.05%. Gains for nontropical waters will see similar patterns but with higher variance with gains of 10 $\pm$ 58.39% under RCP 8.5 and 4.05 $\pm$ 39.73% under RCP 2.6 (Fig. 1S).
+
+```{r Figure_One, eval = F, echo = F, fig.pos="H", fig.align= "center", fig.cap="Change in biomass under climate change, incorporating current no-take MPAs. Results for mid century (2041-2060) relative to present (1995-2014) under a high emission scenario (RCP 8.5). Results from the MPA model with MPAs included in this study outlined in black."}
+
+# Figure 1. Change in biomass under climate change, incorporating current no-take MPAs. Results for mid century (2041-2060) in reference to present (1995-2014) under a high emission scenario (RCP 8.5). Results from the MPA model with MPAs included in this study outlined in black.
+
+F1Path <- paste(Results_Folder,"Figure1.png",sep="")
+img <- readPNG(F1Path)
+grid.raster(img)
+
+```
+
+![**Fig. 1. Change in biomass under climate change, incorporating current no-take MPAs.** Results for mid century (2041-2060) relative to present (1995-2014) under a high emission scenario (RCP 8.5). Results from the MPA model with MPAs included in this study outlined in black.](/nfs/mpasandclimatechange-data/Global Paper/Submission_NCC/Figures/Figure1.png)
+
+
+
+
+```{r Statistical_Time, eval = T, echo = F}
+
+Delta_Time_Stats <- read.csv("/nfs/mpasandclimatechange-data/Global Paper/Paper_Results/Delta_Time_Stats.csv")
+
+MPA_Mid <- Delta_Time_Stats %>% 
+  filter(
+    time_period == "Mid Century",
+    RCP == 85,
+    Region == "MPA"
+    )
+
+Surr_Mid <- Delta_Time_Stats %>% 
+  filter(
+    time_period == "Mid Century",
+    RCP == 85,
+    Region == "Surrounding"
+    ) %>% 
+  pull(statistic)
+
+Surr_Mid <- Delta_Time_Stats %>% 
+  filter(
+    time_period == "Mid Century",
+    RCP == 85,
+    Region == "Surrounding"
+    )
+
+# END OF CENTURY MPA and Surrounding water
+ MPA_Sur_End <- Delta_Time_Stats %>% 
+  filter(
+    time_period == "End of Century",
+    RCP == 85,
+    Region %in% c("MPA", "Surrounding")
+    )
+
+
+  
+```
+
+
+By comparing today’s biomass to the mid and end of the $21^{st}$ century, results from the MPA model suggest that, overall, areas containing MPAs and surrounding waters will see a decrease through time towards the end of the $21^{st}$ century (-3.46 $\pm$ 41.42%), regardless of the climate change scenario (Fig. 2). However, these results will be variable with large postive and negative effects. While some gridcells containing MPAs and surrounding waters will see a reduction of -100% in biomass (most of them in the tropics), others are expected to have gains of 200% (polar areas where fishing is not common today). By the end of the $21^{st}$ century under the high emission scenario, areas containing MPAs will experience the majority of increases in biomass when compared to surrounding waters (MPA expected gains of 40.82 $\pm$ 47.32% compared to surrounding water gains of 39.47 $\pm$ 46.93%). Despite overall losses, by the mid $21^{st}$ century, biomass within areas containing MPAs will not be significantly different than today, even under the high emission scenario (Wilcoxon-test, *W* = `r MPA_Mid$statistic`, *p* = `r round(MPA_Mid$p.value,3)`), as opposed to surrounding waters (Wilcoxon-test, *W* = `r Surr_Mid$statistic`, *p* = `r round(Surr_Mid$statistic,2)`). However, by the end of the century, both areas will be significantly (*p* < 0.001) less abundant than today under the high emission scenario (See Table S1 for full statistics). 
+
+```{r Figure_Two, eval = F, echo = F, fig.pos="H", fig.align= "center", fig.cap="Percentage change of biomass within regions containing MPAs and in surrounding waters relative to today. Whiskers represent 1.5* interquartile range. Box represents interquartile range as distance between first and third quartiles. Line represents median, and black points represent outliers (outside of 1.5*IQR)"}
+
+# Figure 2. Percentage change of biomass within regions containing MPAs and in surrounding waters relative to today. Whiskers represent 1.5* interquartile range. Box represents interquartile range as distance between first and third quartiles. Line represents median, and black points represent outliers (outside of 1.5*IQR). 
+
+F1Path <- paste(Results_Folder,"Figure2.png",sep="")
+img <- readPNG(F1Path)
+grid.raster(img)
+
+```
+
+![**Fig. 2. Percentage change of biomass within regions containing MPAs and in surrounding waters relative to today.** Whiskers represent 1.5* interquartile range. Box represents interquartile range as distance between first and third quartiles. Line represents median, and black points represent outliers (outside of 1.5*IQR)](/nfs/mpasandclimatechange-data/Global Paper/Submission_NCC/Figures/Figure2.png)
+
+
+```{r Statistical_Models, eval = T, echo = F}
+
+Stats_Data_Models <- read.csv("/nfs/mpasandclimatechange-data/Global Paper/Paper_Results/Stats_Data.csv") %>% 
+  filter(time_period == "Mid Century")
+
+## Statistis for printing on manuscript when rendering
+
+# Biomass 
+Biomass_MPA <- Stats_Data_Models %>% 
+  filter(Data_Type == "Abd",
+         Region == "MPA") %>% 
+  pull(statistic) # p value smaller than 0.001
+
+Biomass_Surro <- Stats_Data_Models %>% 
+  filter(Data_Type == "Abd",
+         Region == "Surrounding") %>% 
+  pull(statistic) # p value smaller than 0.001
+
+# Revenue
+Revenue_Surro <- Stats_Data_Models %>% 
+  filter(Data_Type == "revenue",
+         Region == "Surrounding") %>% 
+  pull(statistic) # p value smaller than 0.001
+
+Revenue_MPA <- Stats_Data_Models %>% 
+  filter(Data_Type == "revenue",
+         Region == "MPA") %>% 
+  pull(statistic) # p value smaller than 0.001
+
+# Unprotected areas
+Biomass_Unp <- Stats_Data_Models %>% 
+  filter(Data_Type == "Abd",
+         Region == "Unprotected")
+
+Revenue_Unp <- Stats_Data_Models %>% 
+  filter(Data_Type == "revenue",
+         Region == "Unprotected")
+
+```
+
+When statistically comparing the no-MPA model to the MPA model, we found that regionally, the presence of MPAs can reduce losses to species biomass and fisheries revenue under climate change in the mid $21^{st}$ century, even under a high emission scenario (Fig. 3). Overall, biomass is significantly higher within MPAs (Wilcoxon-test, *W* = `r Biomass_MPA`, *p* < 0.001) and surrounding waters (Wilcoxon-test, *W* = `r Biomass_Surro`, *p* < 0.001) in the MPA scenario compared to the no-MPA scenario (Fig. 3A). Revenue is significantly higher in surrounding waters due to the biomass spillover effect (Wilcoxon-test, *W* = `r Revenue_Surro`, *p* < 0.001) and significantly lower (Wilcoxon-test, *W* = `r Revenue_MPA`, *p* < 0.001) in grids containing MPAs in the MPA scenario (Fig. 3B). This result is expected as fishing mortality is reduced in these areas proportional to the MPA cover (e.g. from 0.2 in the no-MPA model to 0.1 in the MPA model for an MPA that covers half the grid cell - see Methods). For both biomass and revenue, no significant difference (Wilcoxon-test, *W* = `r Biomass_Unp$statistic`, *p* = `r round(Biomass_Unp$p.value,3)` , Wilcoxon-test, *W* = `r Revenue_Unp$statistic`, *p* = `r round(Revenue_Unp$p.value,3)`) was detected when comparing regions up to 7.5 decimal degrees (~825 km) away from an MPA border. The benefits of MPAs significantly increase with increasing latitude. Specifically, the percentage change in biomass (between the MPA and no-MPA model) within MPAs (*p* < 0.001, R2 =.3216, *F* = 3218, DF = 1:6783) and surrounding waters (*p* < 0.001, R2 =.1351, *F* = 558, DF = 1:3565), and percentage change in revenue in surrounding waters (p <0.001, R2 =.1354, F = 558.9, DF = 1:3562) both significantly increase with latitude (Fig. 3C). Such an effect is not as obvious in the open ocean as latitude only explains 1.3% of the variance in the percentage change in biomass (*p* < 0.001, R2 =.0134, *F* = 1923, DF = 1:141566). 
+
+```{r Figure_Three, eval = F, echo = F, fig.cap = "Biomass (A) and revenue (B) differences between the MPA and the no-MPA scenarios. Results for mid century (2041-2060) under high emission scenario (RCP 8.5) within MPA and surrounding cells up to 7.5 decimal degrees (~825 km) from an MPA border representing 99% of the cumulative distribution. Density plots (C) represent the average difference between the MPA and no-MPA models aggregated by latitude (frequency of values from <-25% to >25%) in all areas, waters containing MPAs, surrounding waters, and unprotected water."}
+
+
+# Figure 3. Biomass (A) and revenue (B) differences between the MPA and the no-MPA scenarios under the RCP 8.5 climate change scenario. Results for mid century (2041-2060) under high emission scenario (RCP 8.-5) within MPA and surrounding cells up to 7.5 decimal degrees from an MPA border representing 99% of the cumulative distribution. Density plots (C) represent the average difference between the MPA and no-MPA models aggregated by latitude (frequency of values = -25 to +-25%) in all areas, waters containing MPAs, surrounding waters, and unprotected water. 
+
+F1Path <- paste(Results_Folder,"Figure3.png",sep="")
+img <- readPNG(F1Path)
+grid.raster(img)
+
+```
+
+![**Fig. 3. Biomass (A) and revenue (B) differences between the MPA and the no-MPA scenarios.** Results for mid century (2041-2060) under high emission scenario (RCP 8.5) within MPA and surrounding cells up to 7.5 decimal degrees (~825 km) from an MPA border representing 99% of the cumulative distribution. Density plots (C) represent the average difference between the MPA and no-MPA models aggregated by latitude (frequency of values from <-25% to >25%) in all areas, waters containing MPAs, surrounding waters, and unprotected water.](/nfs/mpasandclimatechange-data/Global Paper/Submission_NCC/Figures/Figure3.png)
+
+# Discussion
+
+We found that the implementation of marine protected areas to a pre-existing global model resulted in similar trends in biomass and catch potential, with increases in higher latitudes and decreases in the tropics [@Cheung:2009ud; @Cheung:2016jd]. While our results demonstrate that on an aggregate level, MPAs will not completely counteract the effects of climate change, areas within MPAs will see the least extreme losses. Moreover, some areas within MPAs and outside of the tropics will experience gains in biomass towards the end of the century as species shift poleward in search for cooler waters [@Cheung:2016jd]. These results suggest that some areas within MPAs could be buffered from the expected negative impacts of climate change on biomass  until the mid $21^{st}$ century, thus emphasizing the importance of global agreements (e.g. Paris Agreement, UN Conference of Parties, COP 21) to keep global temperature below $2^oC$ [@UnitedNations:eF9vp4KK]. Reaching such a goal will not only benefit marine conservation as shown here, but also marine fisheries [@Cheung:2016tt]. Moreover, timing is critical for future meetings such as the COP where Parties will discuss the 2030 goals for the Convention on Biological Diversity (CBD) [@IISD:2020te]. The future conservation agenda must consider the impacts of climate change in order to maintain and recover biodiversity not only in the ocean but also on land [@IPBES:2019uk].
+
+On a local level, MPAs will mitigate the effects of climate change on revenue and biomass. The potential benefits of MPAs in terms of biomass were present within MPA borders and surrounding waters, and the benefits to fisheries revenue were present in surrounding waters, while no effect was seen in unprotected waters. While creating a no-take MPA excludes certain areas to fishing, thus decreasing revenue within the MPA, biological spillover from the MPA will help to increase fishing revenue and biomass in surrounding areas up to a certain distance from the MPA [@Halpern:2010kj], and this will continue under future climate change. Empirical work documents a spillover effect of MPAs ranging from 2km [@Halpern:2010kj] to 150km [@Tremain:2004ul] from the MPAs border, and our model demonstrates such an effect up to ~825km from the MPA border. This result is likely an artifact of the coarse scale of the model, however, it demonstrates that the benefits of spillover from MPAs will continue even under a high emission climate change scenario. 
+
+Our results demonstrate that there is a latitudinal bias in the expected benefits of MPAs under climate change, with benefits to biomass and revenue increasing with latitude. In conjunction with previous studies [@Cheung:2009ud, @BryndumBuchholz:2019kh], our results suggest that as species redistribute from the tropics to polar regions, the higher latitudes will experience major gains in biomass and revenue potential. Expanding on these results, we highlight the ability of high-latitude MPAs to protect these incoming species, which could provide major benefits to fisheries revenue. Thus, the creation of new MPAs in these regions could have positive outcomes for future biomass “arriving” to the region. However, climate change projections for polar regions are subjected to larger levels of uncertainty than other regions [@IPCC:2019to]. For example, a recent study projecting climate change impacts on marine biomass employing six marine ecosystem models found the greatest model disagreement in the Arctic and smallest in the South Pacific Ocean [@BryndumBuchholz:2019kh]. Such uncertainty permeates in our analysis and must be considered when deciding where to implement MPAs.
+
+While species are shifting towards the poles, our results demonstrate that MPAs in the tropics are evermore important as these areas will experience the greatest losses under climate change [@Bruno:2018cs]. The presence of MPAs in these regions can help to alleviate losses, as protected areas still contribute to some climate risk-reduction to fisheries, although range shifts set a limit to its effectiveness from fully off-setting the projected impacts on fish biomass and revenues. In addition to the benefits of MPAs on biomass and revenue, many documented benefits of well-managed MPAs are likely to continue under climate change including areas as refugia from the effects of fishing leading to older and larger populations, ecosystem resilience and diversity, and carbon sequestration, thus promoting adaptation of social-ecological systems to climate change [@Roberts2017]. Therefore, the implementation of MPAs by tropical coastal nations could still provide some benefits under climate change. 
+
+Previous studies have hypothesized that MPAs with fixed borders will not be able to fully protect species that shift their known distribution to cope with a changing ocean [@FredstonHermann:2018kp; @Bruno:2018cs]. Our results support this hypothesis for most MPAs, especially those located in the tropics. Dynamic MPAs that shift their border following climate change or networks of protected areas are possible solutions to protect the redistribution of species under climate change [@FredstonHermann:2018kp; @McLeod:2009cl]. Indeed, empirical results [@Rassweiler:2020bp] show that well established marine reserve networks can support conservation under climate change. However, more research is needed to understand the effects of MPA design on performance under climate change. On the other hand, sessile species with limited mobility, and those associated with highly vulnerable environments (e.g. located in areas of greater warming) such as tropical coral reefs will still be heavily impacted [@Hughes:2018gh], even if they remain protected. 
+
+In this paper we make assumptions regarding future climate, ecology, and economics that capture the whole spectrum of mitigation actions for our analysis (see Methods). Therefore, our results are not without uncertainty. Our analysis assumes that all MPAs are well managed and thus conservation goals are achieved, however many MPAs fail to achieve their conservation goals [@Edgar:2014fia]. In this sense, our results support the improovement of MPAs management. In addition, we do not consider other benefits of MPAs such as increase in biodiversity [@Halpern:2003uz] or the economic benefits of fish species without explicit fisheries market values, such as many coral reef species and sharks that provide millions of dollars in revenue through tourism [@CisnerosMontemayor:2013dv].
+
+# Conclusion
+
+The United Nations Sustainable Development Goals call for the increased global protection of marine ecosystems (SDG 14), which includes understanding the impacts of climate change on MPAs and consequently fisheries revenue. Our study highlights the consequences of climate change on the protection of marine species and the repercussions to society through its impact on revenues from fishing. Our models suggest that existing no-take MPAs cannot fully counteract fish biomass and fisheries revenue losses due to climate change, regardless of the scenario. However, existing MPAs will provide a buffer to biomass and fisheries losses on a regional level and will continue to outperform no-MPA areas as species shift polewards in search of colder waters. Thus, thoughtful future designations of MPAs are needed in areas where the effects of climate change may be severe, but also in areas where biomass will most likely be moving in the future.
+
+# Materials and Methods
+
+## Experimental Design
+
+We projected the distribution of 985 commercially important marine species under climate change for the whole globe using an already established dynamic bioclimate envelope model (hereafter referred as DBEM) [@Cheung:2016jd]. These species cover 47% of the species identified by the *Sea Around Us*, representing 97% of the catch identified at the species' level, and 56% of the world catch (e.g. including categories such as "Miscellaneous fin fishes") between 2004 and 2015 [@Zeller2016]. The DBEM uses species depth limits, Northern and Southern latitudinal range limits, and association with major habitat types to predict current and future species relative biomass. The model predicts biomass and catch at maximum sustainable yield or maximum catch potential (MCP) of the modeled species at a $0.5^o$ latitude by $0.5^o$ longitude scale (See Cheung *et al* 2016, for model details [@Cheung:2016jd]). We calculated biomass and MCP for each species using the climate forcings of three Earth System Models (ESM); the Geophysical Fluid Dynamics Laboratory Earth System Model 2M (GFDL, https://www.gfdl.noaa.gov/earth-system-model/), the Institute Pierre Simon Laplace Climate Model 5 (IPSL-CM5, http://cmc.ipsl.fr/ipsl-climate-models/ipsl-cm5/), and the Max Planck Institute for Meteorology Earth System Model (MPI, http://www.mpimet.mpg.de/en/science/models/). We included two climate change scenarios following the Representative Concentration Pathways (RCPs) set by the Intergovernmental Panel for Climate Change, representing a low emission (strong mitigation, RCP 2.6) and a high emission (no mitigation, RCP 8.5) scenario [@IPCC:2019to]. Projections were made for three time periods representing the present time (1995-2014), and the mid century (2041-2060) and the end of the $21^{st}$ century (2081-2100).
+
+We ran two iterations of the DBEM, one similar to previous studies [@Cheung:2009ud] where there were no MPAs and thus fishing mortality in each grid cell was just a function of the species biomass (hereafter referred as the No-MPA Model), and a scenario where MPAs reduced the fishing mortality of any given cell (hereafter referred as the MPA Model). For this second model we used the United Nations Environment World Conservation Monitoring Center’s World Database on Protected Areas of December 2018[@UNEPWCMC:2019tc]. We first divided the World Database on Protected Areas in 0.5° by 0.5° to match the DBEM identifying cells that contain an MPA (either MPA or within MPA), were surrounding an MPA but do not contain an MPA (Surrounding waters), and those that were not surrounding to nor an MPA (Unprotected waters). The spatial designation analysis was conducted in ArcMap 10.6.1. In total, we selected 596 no-take marine and coastal MPAs. We then estimated the proportion of each grid cell that contained a no-take MPA using the “tabulate intersection” tool in ArcMap 10.6.1 and used this information to adjust the fishing mortality included in the DBEM. We assumed that each grid cell is homogeneus enought that, closing any percentage of the grid to fishing would have the same effect in terms of biomass. Finally we adjust fishing mortality ($\widehat{F}$) for each cell as follows,
+
+<!-- $$\hat{F} = F_{MSY}*(1-\alpha)$$ -->
+
+\begin{equation}
+\label{eq:1}
+\hat{F} = F_{MSY}*(1-\alpha)
+\end{equation}
+
+
+where $F_{MSY}$ is the DBEM estimated fishing mortality at MSY (Maximum Catch Potential) and $\alpha$ is the proportion of the gridcell covered by any given MPA. This way, the MPA model accounts for spillover as biomass within protected grid cells build up to carrying capacity and then spill over surrounding cells. 
+
+The underlying DBEM process that accounts for species-specific patterns of larval dispersal between cells is due to adult and larval advection [@Cheung:2016jd]. Larval dispersal from one cell to another is driven by ocean current and diffusion, assuming that the recruitment magnitude is related to the larval duration in the water column [@Oconnor:2007vi], strength and direction of water currents and diffusivity (See Cheung (2016) [@Cheung:2016jd] for a more detailed explanation). The pelagic larval duration will be shorter in warmer waters, however, longer when the average water temperature of a species distribution is high [@Oconnor:2007vi]. The instantaneous rate of larval mortality and settlement ($\lambda$) is estimated by: 
+
+<!-- $$\lambda = M + S$$ -->
+\begin{equation}
+\label{eq:2}
+\lambda = M + S
+\end{equation}
+
+where *M* and *S* are the natural mortality and settlement rates of larvae, respectively. We tested our results to the sensitivity of three key (fixed) parameters that project larvae dispersion. We tested the capacity of larvae to diffuse within the water column, settle in each grid cell, and survive in the water column. In the case of diffusion, which is species dependent, we modeled each species' value $\pm$ 5% and 10%. For larvae settlement and suitability (original values at 0.15 $day^{-1}$) we ran the model for 0.05, 0.10, 0.20 and 0.25 $day^{-1}$. We estimated the differences between the MPA model and the no-MPA model (e.g. Fig. 2) for each variable and found that our results are robust to such parameters (Fig. 4). The selection of ESM, climate change scenario, and time frame was arbitrary since it does not affect the sensitivity test.
+
+
+```{r Figure_Four, eval = F, echo = F, fig.cap=""}
+
+# Figure 3. Biomass (A) and revenue (B) differences between the MPA and the no-MPA scenarios under the RCP 8.5 climate change scenario. Results for mid century (2041-2060) under high emission scenario (RCP 8.-5) within MPA and surrounding cells up to 7.5 decimal degrees from an MPA border representing 99% of the cumulative distribution. Density plots (C) represent the average difference between the MPA and no-MPA models aggregated by latitude (frequency of values = -25 to +-25%) in all areas, waters containing MPAs, surrounding waters, and unprotected water. 
+
+F1Path <- paste(Results_Folder,"Figure4.png",sep="")
+img <- readPNG(F1Path)
+grid.raster(img)
+
+```
+
+![**Fig. 4. Sensitivity analysis of larvae dispersal parameters.** Biomass differences between the MPA and the no-MPA scenarios in grid cells surrounding MPAs. Test run using a random set of 40 species for the region around the Chagos marine protected area and the GFDL model under RCP 8.5. Results were averaged for the present time period. Showing results > 0 and < than 25% for the sake of visualization.](/nfs/mpasandclimatechange-data/Global Paper/Submission_NCC/Figures/Figure4.png)
+
+
+To analyze the data, for each species we first average biomass and MCP of each grid cell by time period and ESM in order to reduce temporal and structural model sensitivity related to the ESMs [@Payne:2016gn]. We then use the averaged DBEM outputs to estimate fisheries revenue using historical current and past catch data and ex-vessel price. Fisheries catch data was obtained from the *Sea Around Us* database available at (www.searound.org). The *Sea Around Us* has reconstructed fisheries catches for all maritime countries and territories in the world from 1950 to present [@Zeller2016]. Fisheries catches were spatially assigned and allocated by species and habitat distributions to the same global 0.5 by 0.5° scale than the DBEM. In addition to catch, we use the ex-vessel price for each species, caught by each country, in each year from  a reconstructed ex-vessel price database [@Tai2017]. We assume the proportion of catch of a species in a cell caught by a particular country will remain the same in the future and is calculated as the average value for the previous ten years (2005-2014). This assumption is necessary to use the country-specific prices for each species in the modeled future scenarios. Thus, we estimate fisheries revenues as the weighted average price multiplied by the MCP in each cell. As countries have different prices for different species, we used current catch proportions by country and species in each cell to derive a weighted average price per tonne for each species. The weighted price was established using the proportion of each country’s current catch multiplied by the country-species specific price. We calculated the existence value as the potential ex-vessel value of the species (their current ex-vessel price multiplied by their biomass). Within a no-take MPA grid cell, catches are assumed to be zero. Finally, for each DBEM-Model we aggregated the biomass, MCP, and revenue of all species modeled by gridcell and RCP.
+
+To determine the effects of climate change in MPAs we evaluate the percentage change ($\Delta V$) in the above variables (biomass, MCP, and revenue) between three time periods (present, mid century, and end of the $21^{st}$ century) and between MPA models (outputs from the MPA model compared to those of the no-MPA model) as follows,
+
+$$ \Delta V = \frac{V_{x}-V_{y}}{\frac{V_{x}+V_{y}}{2}}*100 $$
+\begin{equation}
+\label{eq:3}
+\Delta V = \frac{V_{x}-V_{y}}{\frac{V_{x}+V_{y}}{2}}*100
+\end{equation}
+
+where $V_{x}$ is the variable at mid or end of the $21^{st}$ century, or the result from the MPA model and $V_{y}$ is the variable at present time, or the variable from the no-MPA model. As an arbitrary rule, for all cases where  $V_{x}$ = 0 but $V_{y}$ > 0, $\Delta V$ = 100,  contrarily, if $V_{x}$ > 0 but $V_{y}$ = 0, $\Delta V$= -100, and vice versa, naturally if both $V_{x}$ and $V_{y}$ = 0, then $\Delta V$ = 0.
+
+We made assumptions for all three components (climate, ecology, and economic) of the current analysis, and thus, our results are not free of uncertainty. Regarding the environmental models, we ran the DBEM using each of the ESMs mentioned above and average the results of each DBEM run to reduce the structural uncertainty within the ESMs. Moreover, our analysis assumes two extreme climate change scenarios according to the IPCC, capturing the whole spectrum of current societal actions regarding mitigation. In the ecological component, we rely on a mechanistic species distribution model (the DBEM) to project the future distribution of marine species. Despite this being a common tool in biogeography, these types of models do not include species interactions, potential evolutionary adaptation and are subjected to the original data from which the model distribution is made. Moreover, the model does not consider additional stress resulting from ocean acidification [@Cheung:2009ud]. In addition, our analysis does not include certain biological benefits of MPAs such as increases in biodiversity, age structure, and other population dynamics. In the economic analysis we assume that future ex-vessel prices are the same as present ex-vessel prices. Although this is a major assumption, previous research supports this general trend [@Tai2017; @Swartz:2012ea]. Our analysis only includes value information for fish with available price data, meaning that the value of species that are not harvested and traded in markets such as many coral reef species, is not captured in this analysis. We also do not take into account other non-market values of fish, such as values for recreational divers, because of lack of available value estimates on a global scale (non-market values of MPAs have been estimated in a number of studies at a local level [-@Wallmo:2008ec; @Gill:2015ht]).
+
+## Statistical Analysis
+
+Finally, we determine the statistical significance of changes between the models using the non-parametric Wilcoxon signed-rank test since the data was not normally distributed presenting high skewness and a sharper peak (leptokurtic according to the kurtosis test done with the *moments* [@PackagemomensMome:2015uh] package in *R* studio). All of the data analysis and statistics were made with the statistical software *R* studio version 3.6.2 (2019-12-12) and associated packages *data.table* [@Packagedatatable:2019uh], *wesanderson* [@Packagewesanderson:2018vn], *cowplot* [@CowplotStreamlined:2019wt], *ggpubr* [@Packageggpubrggp:2018tv], *kableExtra* [@PackagekableExtra:2019td], *knitr* [@PackageknitrAGen:2020wta], *sf* [@PackagesfSimpleF:2018vp], *sp* [@PackagespClasses:2019tn], *tidiverse* [@PackagetidyverseE:2017vq], *tidytext* [@PackagetidytextTe:2019vk], and *zoo* [@PackagezooSInfr:2019tm].
+
+## Supplementary material
+
+Fig S1. Change in biomass under climate change, incorporating current no-take MPAs. Results for end of century (2090-2100).  
+Fig. S2. Biomass (A) and revenue (B) differences between the MPA and the no-MPA scenarios under the RCP 8.5 climate change scenario. Results for end of century (2090-2100).  
+Table S1. Statistics summary of two-sided Wilcoxon rank sum test with continuity correction.  
+
+
+
+# References
+
+<div id="refs"></div>
+
+# Acknowledgements
+
+**Funding:** This work was supported by the National Socio-Environmental Synthesis Center (SESYNC) under funding received from the National Science Foundation DBI-1639145.  
+**Author contributions:** J.P.A., S.M.R., T.C., T.t.B., A.M. & T.N. contributed to the original study design and writing of the manuscript. J.P.A., S.M.R. & T.C. conducted the analysis. W.W.L.C. designed and provided data to run the species distribution model. All authors contributed to editing of the manuscript, and approved the final version.  
+**Competing interests:** The authors declare no competing financial interests.  
+**Data and materials availability:** All data is available upon reasonable request and code can be found at https://github.com/jepa/climatechangempa
+
+
+\clearpage
+
+# Supplemental
+
+
+```{r Figure_S1, eval = F, echo = F, fig.pos="H", fig.align= "center"}
+
+# Figure 3. Biomass (A) and revenue (B) differences between the MPA and the no-MPA scenarios under the RCP 8.5 climate change scenario. Results for mid century (2041-2060) under high emission scenario (RCP 8.-5) within MPA and surrounding cells up to 7.5 decimal degrees from an MPA border representing 99% of the cumulative distribution. Density plots (C) represent the average difference between the MPA and no-MPA models aggregated by latitude (frequency of values = -25 to +-25%) in all areas, waters containing MPAs, surrounding waters, and unprotected water. 
+
+F1Path <- paste(Results_Folder,"FigureS1.png",sep="")
+img <- readPNG(F1Path)
+grid.raster(img)
+
+```
+
+![](/nfs/mpasandclimatechange-data/Global Paper/Paper_Results/Figures/Figure_S1.png)
+
+**Fig. S1. Change in biomass under climate change, incorporating current no-take MPAs.** Results for mid (2041-2060) and end (2081-2099) century in reference to present (1995-2014) under a low (RCP 2.6) and high emission scenario (RCP 8.5). Results from the MPA model with MPAs included in this study outlined in black.
+
+
+![](/nfs/mpasandclimatechange-data/Global Paper/Paper_Results/Figures/Figure_S2.png)
+
+**Fig. S2. Biomass (A) and revenue (B) differences between the MPA and the no-MPA scenarios under the RCP 8.5 climate change scenario.** Results for end of century (2090-2100) under high emission scenario (RCP 8.-5) within MPA and surrounding cells up to 7.5 decimal degrees from an MPA border representing 99% of the cumulative distribution. Density plots (C) represent the average difference between the MPA and no-MPA models aggregated by latitude (frequency of values = -25 to +-25%) in all areas, waters containing MPAs, surrounding waters, and unprotected water
+
+\clearpage
+
+**Table S1. Statistics summary of two-sided Wilcoxon rank sum test with continuity correction.** Comparing and present time abundance (1995-2014) against abundance of Mid (2041-2060) and End (2081-2099) of the 21st century for waters within MPAs and surrounding MPAs under RCP 2.6 (low emission scenario) and 8.5 (high emission scenario)
+
+```{r table_s1, eval = F, echo = F, fig.pos="H"}
+
+read.csv("/nfs/mpasandclimatechange-data/Global Paper/Paper_Results/Delta_Time_Stats.csv") %>% 
+  mutate(
+    RCP = ifelse(RCP == 26,"Low Emission Scenario (2.6)","High Emission Scenario (8.5)")
+  ) %>% 
+  arrange(desc(time_period)) %>% 
+  select(1:5) %>%
+  kable(
+    booktabs = T,
+    align = "c",
+    linesep = ''
+  ) %>%
+  collapse_rows(1:3, row_group_label_position = 'stack')
+  
+
+
+```
