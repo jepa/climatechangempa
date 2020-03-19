@@ -14,7 +14,7 @@ This repository is intended to support the project *Marine Protected Areas Can R
 
 3. Fisheries Economics Research Unit, Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, BC, Canada
 
-4 .Department of Marine Affairs, University of Rhode Island, Kingston, RI, USA
+4. Department of Marine Affairs, University of Rhode Island, Kingston, RI, USA
 
 5. Department of International Studies, American University of Sharjah, Sharjah, United Arab Emirates
 
