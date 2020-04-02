@@ -46,24 +46,20 @@ ipak <- function(pkg){
 
 #### Library ###
 packages <- c(
-  "readxl", # Read dataframe #*TC
   "dplyr", # Data manipulation
   "tidyr", # Data manipulation
   "ggpubr", #Nice grpahs and spatial analysis
-  "gridExtra", # For gridarrange #*TC
   "cowplot", # For putting graphs in nice grids
   "knitr",
   "data.table",
-  "stringr", # for string analysis #*TC
   "rgdal", # Spatial analysis 
   "tools", # Spatial analysis 
   "sf", # Shapefile packages
   "broom", # for multiple statistics
   "moments", # for exploring normallity
-  "rfishbase", # for getting spp hab #*TC
   "wesanderson"
   )
-
+moments::
 ipak(packages)
 
 # Functions needed to run the analysis
