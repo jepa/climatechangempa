@@ -1104,7 +1104,7 @@ In here we compared the differences in abundance and MCP between the fish and MP
 
 ```{r stats_results_models, eval = T, echo = F}
 
-Stats_Data <- All_Models %>% 
+Delta_Models <- All_Models %>% 
   spread("Model","total") %>% 
   left_join(MPA_Grid,
             by= "INDEX") %>%  # 1 mpa ; 2 touching
@@ -1130,12 +1130,12 @@ Stats_Data <- All_Models %>%
   tidy(Wilcox) %>% #Tim doesn't like the "Sig" column
   mutate(Sig = ifelse(p.value > 0.05,"No","Yes"))
 
-write.csv(Stats_Data,
+write.csv(Delta_Models,
           "/nfs/mpasandclimatechange-data/Global Paper/Paper_Results/Stats_Data_models.csv",
           row.names = F)
 
 
-Stats_Data %>% 
+Delta_Models %>% 
   # gather("Model","total",Fish:MPA) %>% 
   filter(
     time_period == "Mid Century",
@@ -1163,7 +1163,7 @@ Stats_Data %>%
 LM_Data_MPA <- Results_Data %>% 
   mutate(Abs_Latitude = abs(Latitude)) %>% 
   filter(
-    Data_Type == "Abundance",
+    Data_Type == "Biomass",
     Measure == "Mean",
     Touching_b == "MPA",
     time_period == "Mid Century",
@@ -1181,9 +1181,9 @@ plot(LM_Data$Abs_Latitude~LM_Data$Diff_Models)
 LM_Data_Abd <- Results_Data %>% 
   mutate(Abs_Latitude = abs(Latitude)) %>% 
   filter(
-    Data_Type == "Abundance",
+    Data_Type == "Biomass",
     Measure == "Mean",
-    Touching_b == "Touching",
+    Touching_b == "Surrounding",
     time_period == "Mid Century",
     RCP == 85,
     Diff_Models != 0)
@@ -1201,7 +1201,7 @@ LM_Data_Rev <- Results_Data %>%
   filter(
     Data_Type == "Revenue",
     Measure == "Mean",
-    Touching_b == "Touching",
+    Touching_b == "Surrounding",
     time_period == "Mid Century",
     RCP == 85,
     Diff_Models != 0)
@@ -1217,9 +1217,9 @@ plot(LM_Data_Rev$Abs_Latitude~LM_Data_Rev$Diff_Models)
 LM_Data_Open <- Results_Data %>% 
   mutate(Abs_Latitude = abs(Latitude)) %>% 
   filter(
-    Data_Type == "Abundance",
+    Data_Type == "Biomass",
     Measure == "Mean",
-    Touching_b == "Open",
+    Touching_b == "Unprotected",
     time_period == "Mid Century",
     RCP == 85,
     Diff_Models != 0)
@@ -1235,7 +1235,7 @@ plot(LM_Data_Open$Abs_Latitude~LM_Data_Open$Diff_Models)
 LM_Data <- Results_Data %>% 
   mutate(Abs_Latitude = abs(Latitude)) %>% 
   filter(
-    Data_Type == "Abundance",
+    Data_Type == "Biomass",
     Measure == "Mean",
     # Touching_b == "MPA",
     time_period == "Mid Century",
