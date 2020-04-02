@@ -11,7 +11,7 @@ editor_options:
 
 ## 1.1 Step 1 (Ecology)
 
-We first average the Fish Model's Maximum Catch Potential (MCP) of 2005 to 2014 (last years of fisheries data from SAU) for each species for each one of the circulation models (GCM) that we work with (GFDL, MPIL, IPSL). Secondly, we average the 2005-2014 average for all models (To get the 10 years average; "today"). Thirdly, we repeat the steps using the abundance data.
+We first average the Fish Model's Maximum Catch Potential (MCP) of 1995 to 2014 (last years of fisheries data from SAU) for each species for each one of the circulation models (GCM) that we work with (GFDL, MPIL, IPSL). Secondly, we average the 2005-2014 average for all models (To get the 10 years average; "today"). Thirdly, we repeat the steps using the abundance data.
 
 **Result of step 1:** The result is the mean MCP of all models and time period for each species in our database for each grid-cell of the world.
 
