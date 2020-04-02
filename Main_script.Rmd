@@ -23,7 +23,7 @@ We estimate fisheries revenues as the weighted average price multiplied by the p
 
 ## 1.3 Step 3 (Final Result)
 
-**Result of step 3:** We want MCP,ABD and economic value, per grid cell Today (2005 - 2014); Mid century (2041-2060); End Century (2081-2099).
+**Result of step 3:** We want MCP,ABD and economic value, per grid cell Today (1995 - 2014); Mid century (2041-2060); End Century (2080-2099).
 
 # 2. Pre-Analysis; Determine MPA percentage grid
 
