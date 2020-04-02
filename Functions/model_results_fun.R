@@ -7,7 +7,7 @@ model_results <- function(Model=NA, #Needs a model specified (either 'Fish' or '
                           species_list=NA,
                           GCM=NA, #If GCM = NA, then it will run for all GCMs. 
                           year_df=NA,
-                          country_prop_price = country_prop_price,
+                          country_prop_price = country_prop_price, #dataframe with prices for different species and proportion of catch by different countries in a grid cell 
                           Habitat = NA){ # for habitat-specific data
   
   # Added 20 to the name to sinalize 20 years avrg.

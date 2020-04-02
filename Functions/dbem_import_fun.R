@@ -12,7 +12,7 @@ dbem_import <- function(TaxonKey, #Except taxon_key
     if(Path == "NA"){
       Path <- "/nfs/mpasandclimatechange-data/Data/DBEM/Fish_Model/"
     }
-    D_Path <- paste(Path,GCM,"/", #<- drobo path for 8.5
+    D_Path <- paste(Path,GCM,"/", #<- path for Fish model
                     TaxonKey,"/",TaxonKey,Data_Type,Year,".txt",
                     sep="")
   }
@@ -21,7 +21,7 @@ dbem_import <- function(TaxonKey, #Except taxon_key
     if(Path == "NA"){
       Path <- "/nfs/mpasandclimatechange-data/Data/DBEM/MPA_Model/"
     }
-    D_Path <- paste(Path,GCM,"/", #<- drobo path for 8.5
+    D_Path <- paste(Path,GCM,"/", #<- path for MPA model
                     TaxonKey,"/",TaxonKey,Data_Type,Year,".txt",
                     sep="")
     
@@ -36,7 +36,7 @@ dbem_import <- function(TaxonKey, #Except taxon_key
   
   #### Importing data ####
   cur <- lapply(D_Path_accepted, FUN=fread, na.strings="NA")
-  if(length(cur)>0){
+  if(length(cur)>0){ #If no acceptable paths found skip this part and assign blank result to df
     cur <- cur[sapply(cur, function(d) nrow(d) >= 1)] 
     colnames <- c("INDEX", "value")
     cur <- lapply(cur, setNames, colnames)
@@ -47,9 +47,9 @@ dbem_import <- function(TaxonKey, #Except taxon_key
       df <- left_join(df, frame_key, by="column_label") %>% select(-column_label)
       df <- df %>% mutate(Data_Type=Data_Type,
                           GCM = GCM)
-    }
+    } 
   } else {
-    df <- tibble()
+    df <- tibble() #If not data found, assign blank tibble to df
   }
-  return(df)
+  return(df) #Return data imported or blank dataframe
 } #Function end

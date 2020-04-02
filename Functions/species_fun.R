@@ -1,8 +1,8 @@
 
 # Species function
-# Species is a single TaxonKey (will be lapply-ed over all exploited species)
+# Species is a single TaxonKey (will be applied over all exploited species)
 # GCM is designed to be NA if running for all GCMs
-# Year is a sequence of years. Can be initial year(2005 to 2100) or the specific three periods we are looking at:
+# Year is a sequence of years. Can be all years (1995 to 2100) or the specific three periods we are looking at:
 # This function needs country_prop_price loaded to work. 
 # Model is Fish or MPA model
 # Data_Type is DBEM abundance or MCP
@@ -23,9 +23,6 @@ species_function <- function(Model=NA, TaxonKey=NA, GCM=NA, RCP=NA, Year=NA){
                             Data_Type= "Abd"
     )
     
-    # Tests JULIANO #
-    # head(gfdl_abd) # Ok; There are values
-    # -------------- #
     mpi_abd <- dbem_Import(TaxonKey,
                            Path= paste("/nfs/mpasandclimatechange-data/Data/DBEM/", Model, "_Model/", sep=""),
                            Years,
@@ -47,9 +44,6 @@ species_function <- function(Model=NA, TaxonKey=NA, GCM=NA, RCP=NA, Year=NA){
                               Model = Model,
                               Data_Type= "Catch"
     )
-    # Tests JULIANO #
-    # head(gfdl_catch) # Ok; There are values
-    # -------------- #
     mpi_catch <- dbem_Import(TaxonKey,
                              Path= paste("/nfs/mpasandclimatechange-data/Data/DBEM/", Model, "_Model/", sep=""),
                              Years,
@@ -65,7 +59,6 @@ species_function <- function(Model=NA, TaxonKey=NA, GCM=NA, RCP=NA, Year=NA){
                               Data_Type= "Catch"
     )
     
-    # JEPA Aug.16.2019; Changed name from species_data to raw_species_data
     raw_species_data <-  bind_rows(gfdl_abd, gfdl_catch, mpi_abd, mpi_catch, ipsl_abd, ipsl_catch)
     
   }else{
@@ -85,25 +78,16 @@ species_function <- function(Model=NA, TaxonKey=NA, GCM=NA, RCP=NA, Year=NA){
                              Data_Type= "Catch"
     )
     
-    # JEPA Aug.16.2019; Changed name from species_data to raw_species_data
     raw_species_data <-  bind_rows(gcm_abd, gcm_catch) 
     # print("Single GCM specified, code not written yet.")
   }
-  
-  #__________ JEPA Testing __________#
-  # unique(raw_species_data$GCM) # Three models
-  # head(raw_species_data)
-  # Ok; There are values
-  # raw_species_data %>%
-  #   group_by(GCM) %>%
-  #   summarise(sum(value,na.rm=T),
-  #             mean(value,na.rm=T)
-  #   )
-  #_________________________________#
+
   
   raw_species_data <- raw_species_data %>% 
     mutate(year = as.numeric(year))
   
+  #Create blank_frame to allow all GCMs to match to all unique cells and years we have data for that species
+  #Needed to properly estimate standard deviations
   cells <- unique(raw_species_data$INDEX)
   blank_frame <- expand.grid(INDEX=cells, year=as.numeric(Years), GCM= as.character(paste(c("GFDL", "IPSL", "MPI"), RCP, sep="")), Data_Type=c("Catch", "Abd"))
   blank_frame_full <- as_tibble(blank_frame)
@@ -116,20 +100,8 @@ species_function <- function(Model=NA, TaxonKey=NA, GCM=NA, RCP=NA, Year=NA){
     mutate(value = if_else(is.na(value), 0, value)) 
   
   
-  paste("Loaded species data after", Sys.time()-s)
+  paste("Loaded species data after", Sys.time()-s) #Progress update
   
-  
-  #__________ JEPA Testing __________#
-  # head(species_data)
-  
-  # Found the glitch in the Matrix!!!!!!!
-  # species_data %>%
-  #   group_by(GCM,Data_Type) %>%
-  #   summarise(sum(value,na.rm=T),
-  #             mean(value,na.rm=T)
-  #   )
-  # We're back on bussines !!!!
-  #_________________________________#
   
   Mean_Spp <- species_data %>%
     left_join(year_df) %>%
@@ -137,14 +109,6 @@ species_function <- function(Model=NA, TaxonKey=NA, GCM=NA, RCP=NA, Year=NA){
     summarize(Mean = mean(value,na.rm=T)) %>% 
     ungroup() %>%
     filter(is.na(time_period)==FALSE) 
-  
-  #__________ JEPA Testing __________#
-  # Mean_Spp %>%
-  #   group_by(GCM,Data_Type) %>%
-  #   summarise(sum(Mean,na.rm=T),
-  #             mean(Mean,na.rm=T)
-  #   )
-  #_________________________________#
   
   # Step 2. Average MCP of all models ####
   Average <- Mean_Spp %>%
@@ -159,9 +123,9 @@ species_function <- function(Model=NA, TaxonKey=NA, GCM=NA, RCP=NA, Year=NA){
     gather("Measure", "value", -INDEX:-Data_Type) %>% 
     mutate(taxon_key = as.character(TaxonKey))
   
-  #### CHECKPOINT- CHARLY- Step 2 ####
+  #### CHECKPOINT- Step 2 ####
   # Average should be a dataset for the world with the mean of all models for each grid (Check)
-  # Check that the NA's are ceros and numeric for futher addition (Check)
+  # Check that the NA's are zeros and numeric for futher addition (Check)
   ###_________________ END OF CHECKPOINT _______________ ###
   
   paste("Finished ecology after", Sys.time()-s)
@@ -213,12 +177,13 @@ species_function <- function(Model=NA, TaxonKey=NA, GCM=NA, RCP=NA, Year=NA){
   paste("Finished econ after", Sys.time()-s)
   
   output <- bind_rows (final_ecology, final_economic)
-  #### CHECKPOINT- CHARLY- Step 3 and NoSpeciesError ####
+  
+  #### CHECKPOINT- Step 3 and NoSpeciesError ####
   # Final_Dataset should be the addition of each species 10 years mean of all models
   # Manually checked that each model was in fact added for each gridcell using 600243 and 600244
   # Cells that have value for each species are added as well as cells that have only one value (for one spp) 
   
-  # Error check should jump those species in the list that do not have data. (Cheked)
+  # Error check should jump those species in the list that do not have data. (Checked)
   ###_________________ END OF CHECKPOINT _______________ ###
   
   

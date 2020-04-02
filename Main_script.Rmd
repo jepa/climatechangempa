@@ -17,13 +17,13 @@ We first average the Fish Model's Maximum Catch Potential (MCP) of 1995 to 2014 
 
 ## 1.2 Step 2 (Economics)
 
-We estimate fisheries revenues as the weighted average price multiplied by the predicted catch in each cell. As countries have different prices for different species, we used current catch proportions by country and species in each cell to derive a weighted average price per tonne for each species. The weighted price was established using the proportion of each country’s catch multiplied by the country-species specific price. All prices were drawn from a global fisheries ex-vessel price database (Tai et al. 2017). We assume a discount rate of 4%. We calculated the existence value as the potential ex-vessel value of the species (their current ex-vessel price multiplied by their biomass). Within a no-take MPA, catches are assumed to be zero. If a cell is partially occupied by a no-take MPA, the fishing mortality (and thus catches) of a species is reduced by the proportion of the cell area occupied by the MPA.
+We estimate fisheries revenues as the weighted average price multiplied by the predicted catch in each cell. As countries have different prices for different species, we used current catch proportions by country and species in each cell to derive a weighted average price per tonne for each species. The weighted price was established using the proportion of each country’s catch multiplied by the country-species specific price. All prices were drawn from a global fisheries ex-vessel price database (Tai et al. 2017). We calculated the existence value as the potential ex-vessel value of the species (their current ex-vessel price multiplied by their biomass). Within a no-take MPA, catches are assumed to be zero. If a cell is partially occupied by a no-take MPA, the fishing mortality (and thus catches) of a species is reduced by the proportion of the cell area occupied by the MPA.
 
 **Result of step 2:** The result is the mean fisheries revenue of all models and time period for each species in our database for each grid-cell of the world. We also compute the existence value calculated as the mean weighted fish price multiplied by ABD for each species for each cell. 
 
 ## 1.3 Step 3 (Final Result)
 
-**Result of step 3:** We want MCP,ABD and economic value, per grid cell Today (1995 - 2014); Mid century (2041-2060); End Century (2080-2099).
+**Result of step 3:** We want MCP, ABD and economic value, per grid cell Today (1995 - 2014); Mid century (2041-2060); End Century (2080-2099).
 
 # 2. Pre-Analysis; Determine MPA percentage grid
 
@@ -46,21 +46,21 @@ ipak <- function(pkg){
 
 #### Library ###
 packages <- c(
-  "readxl", # Read dataframe
+  "readxl", # Read dataframe #*TC
   "dplyr", # Data manipulation
   "tidyr", # Data manipulation
   "ggpubr", #Nice grpahs and spatial analysis
-  "gridExtra", # For gridarrange
+  "gridExtra", # For gridarrange #*TC
   "cowplot", # For putting graphs in nice grids
   "knitr",
   "data.table",
-  "stringr", # for string analysis
+  "stringr", # for string analysis #*TC
   "rgdal", # Spatial analysis 
   "tools", # Spatial analysis 
   "sf", # Shapefile packages
   "broom", # for multiple statistics
   "moments", # for exploring normallity
-  "rfishbase", # for getting spp hab
+  "rfishbase", # for getting spp hab #*TC
   "wesanderson"
   )
 
@@ -424,7 +424,7 @@ NoData <- Both_Models85  %>%
 #### Then, join models and filter out those regions where no spp. were evaluated
 All_Models <- Both_Models85  %>% 
   bind_rows(Both_Models26) %>% 
-  # This is needed to remove cells that are ceros but actually have no fish data
+  # This is needed to remove cells that are zeros but actually have no fish data
   filter(!INDEX %in% NoData) %>% 
   select(-n)
   
@@ -636,8 +636,8 @@ Results_Data <- All_Models %>%
   mutate(
     MPA = ifelse(is.na(MPA), 0, MPA), # I believe there are parts that MPA model does not have?
     Fish = ifelse(is.na(Fish), 0, Fish),
-    Diff_Models = ifelse(MPA == 0 & Fish == 0, 0, # If MPA and Fish are cero, then no difference
-                         ifelse(MPA == 0 & Fish > 0, -100, # If MPA is cero but Fish >0 then -100 
+    Diff_Models = ifelse(MPA == 0 & Fish == 0, 0, # If MPA and Fish are zero, then no difference
+                         ifelse(MPA == 0 & Fish > 0, -100, # If MPA is zero but Fish >0 then -100 
                                 ifelse(MPA > 0 & Fish == 0, 100, # If MPA > 0 but Fish = 0, then +100
                                        ((MPA-Fish)/((MPA+Fish)/2))*100
                                 )
@@ -648,7 +648,7 @@ Results_Data <- All_Models %>%
                  ifelse(Diff_Models >= 25, 25,Diff_Models)
     ),
     # For plot labels
-    Data_Type = ifelse(Data_Type == "Abd","Biomass","Revenue")
+    Data_Type = ifelse(Data_Type == "Abd", "Biomass", "Revenue")
   ) %>% 
   left_join(MPA_Grid,
             by = "INDEX") %>% 
@@ -814,7 +814,7 @@ Hist_Rev <- ggplot() +
                 x=total_value, 
                 color = "Total"), 
             size = 1) +
-  geom_vline(xintercept = 0, colour = "black",linetype = "dotted") +
+  geom_vline(xintercept = 0, colour = "black", linetype = "dotted") +
   scale_color_manual("Spillover effect by latitude",
                      values = wes_palette("Darjeeling2")
   ) +
@@ -1254,10 +1254,10 @@ Averages and s.d. for the results section
 Region_dat <- Delta_Time %>% 
   filter(Model == "MPA") %>% 
   mutate(
-    Geo_Region = ifelse(Latitude >= 66.5, "Polar_N", # If MPA and Fish are cero, then no change
-                        ifelse(Latitude >= 23.5 & Latitude < 66.5, "Sub_Trop_N", # If MPA is cero but Fish >0 then -100 
+    Geo_Region = ifelse(Latitude >= 66.5, "Polar_N", # If MPA and Fish are zero, then no change
+                        ifelse(Latitude >= 23.5 & Latitude < 66.5, "Sub_Trop_N", # If MPA is zero but Fish >0 then -100 
                                ifelse(Latitude >= -23.5 & Latitude < 23.5, "Tropical", # If MPA > 0 but Fish = 0, then +100
-                                      ifelse(Latitude <= -23.5 & Latitude > -66.5, "Sub_Trop_S", # If MPA is cero but Fish >0 then -100 
+                                      ifelse(Latitude <= -23.5 & Latitude > -66.5, "Sub_Trop_S", # If MPA is zero but Fish >0 then -100 
                                              "Polar_S")
                                )
                         )
@@ -1442,8 +1442,8 @@ Sens_PerChange <- Sen_Data %>%
   mutate(
     MPA = ifelse(is.na(MPA), 0, MPA), # I believe there are parts that MPA model does not have?
     Fish = ifelse(is.na(Fish), 0, Fish),
-    Diff_Models = ifelse(MPA == 0 & Fish == 0, 0, # If MPA and Fish are cero, then no change
-                         ifelse(MPA == 0 & Fish > 0, -100, # If MPA is cero but Fish >0 then -100 
+    Diff_Models = ifelse(MPA == 0 & Fish == 0, 0, # If MPA and Fish are zero, then no change
+                         ifelse(MPA == 0 & Fish > 0, -100, # If MPA is zero but Fish >0 then -100 
                                 ifelse(MPA > 0 & Fish == 0, 100, # If MPA > 0 but Fish = 0, then +100
                                        ((MPA-Fish)/((MPA+Fish)/2))*100
                                 )
