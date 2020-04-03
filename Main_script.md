@@ -46,8 +46,8 @@ We estimate fisheries revenues as the weighted average price multiplied by the p
 
 # 2. Pre-Analysis; Determine MPA percentage grid
 
-```{r setup, eval = F, echo=T, warning=F,message=F, results = 'hide'}
 
+```r
 #### READ ME !!! ####
 # This chunk runs all the pkgs needed for the analysis
 # Run this chunk before knit so you make sure you have all pkgs installed in R
@@ -86,12 +86,11 @@ source("./Functions/DBEM_imp.R")
 source("./Functions/rcp_summary.R")
 source("./Functions/DBEM_imp.R")
 source("./Functions/model_results.R")
-
 ```
 
 
-```{r Grid_Analysis, eval=F, echo=T}
 
+```r
 # Create dataset of MPAs to incorporate into the DBEM
 # NOTE:
 # grid_MPA_notake.csv <- was created using ARCGIS (SA) using the World Data base
@@ -149,8 +148,8 @@ write.csv(MPA_Indexb,
 
 ## Run SESYNC model on DBEM data
 
-```{r Control_pannel, eval = F, echo=T}
 
+```r
 # Load all data needed to run the routine
 
 # Time frame
@@ -189,12 +188,11 @@ country_prop_price <- left_join(country_species_catch_prop, prices) %>%
 # Load Lat long data of the world
 Lon_Lat_DBEM <- fread("/nfs/mpasandclimatechange-data/Data/Lon_Lat_DBEM.txt",header = FALSE)
 colnames(Lon_Lat_DBEM) <- c("INDEX","Longitude","Latitude")    
-
 ```
 
 
-```{r main_routine, eval = F, echo = T}
 
+```r
 # This chunk runs the model for each conservation (fish and MPA) and climate change (low and high) scenario
 
 start <- Sys.time()
@@ -234,7 +232,6 @@ mpa_85 <- model_results(Model="MPA",
                         country_prop_price=country_prop_price) 
 end <- Sys.time()
 mpa85_time <- end-start
-
 ```
 
 # 4. Results
@@ -247,8 +244,8 @@ Load functions needed for analyzing results
 
 This function simply reads the results in one single data frame
 
-```{r FUN_ReadResults, eval = F, echo = T}
 
+```r
 # This function loads the datasets depending on the model and RCP. 
 # Note that path has to be changed once data is downloaed
 
@@ -305,9 +302,8 @@ Read_Results <- function(Model,RCP,Path="NA"){
 
 This function standardizes `ggplot` themes among all plots
 
-```{r FUN_ggtheme, eval =T, echo = T}
 
-
+```r
 # Standarization of plots
 ggtheme_Plot <- function() {
   theme(
@@ -359,8 +355,8 @@ ggtheme_Map <- function(base_size = 9, Region = "NA") {
 
 ## 4.2 Load Data and Results
 
-```{r Load_Results, eval = F, echo = T}
 
+```r
 # Data needed for the analysis
 
 # ---------------- #
@@ -458,8 +454,6 @@ All_Models <- Both_Models85  %>%
   
 # Path for saving results (Note that we have ./Figures for figures)
 Result_Path <- "./data/Data/Results"
-
-
 ```
 
 
@@ -469,8 +463,8 @@ Result_Path <- "./data/Data/Results"
 
 Figure 1. Change in biomass under climate change, incorporating current no-take MPAs.** Results for mid century (2041-2060) relative to present (1995-2014) under a high emission scenario (RCP 8.5). Results from the MPA model with MPAs included in this study outlined in black.
 
-```{r Fig_one__Data, eval = F, echo = T}
 
+```r
 Delta_Time <- All_Models %>% 
   spread(time_period,total) %>% 
   mutate_at(vars(`Mid Century`, # Estimate percentage differences
@@ -498,12 +492,11 @@ Delta_Time <- All_Models %>%
 # head(Delta_Time)
 # max(Delta_Time$Per)
 # min(Delta_Time$Per)
-
 ```
 
 
-```{r Figure_One_plot, eval = F, echo = T}
 
+```r
 ggplot() +
   geom_tile(data = subset(Delta_Time, 
                           Model == "MPA" &
@@ -537,16 +530,14 @@ ggplot() +
     filename = "Figure1.png",
     path= "./data/Global Paper/Submission/Figures"
   )
-
-
 ```
 
 ## Fig. 2. Boxplot changes over time MPA
 
 Fig. 2. Percentage change of biomass within regions containing MPAs and in surrounding waters relative to today.** Whiskers represent 1.5* interquartile range. Box represents interquartile range as distance between first and third quartiles. Line represents median, and black points represent outliers (outside of 1.5*IQR)
 
-```{r Fig_two_data, eval = F, echo = T}
 
+```r
 Delta_Time_MPA <- All_Models %>% 
   filter(
     Measure == "Mean",
@@ -580,11 +571,10 @@ Delta_Time_MPA <- All_Models %>%
   Order = ifelse(RCP == "Low",1,2)
   ) %>% 
   filter(!is.na(Touching))
-
 ```
 
-```{r Fig_two_plot, eval = F, echo = T}
 
+```r
 ggplot(Delta_Time_MPA,
        aes(
          x = reorder(RCP,Order),
@@ -638,8 +628,6 @@ ggplot(Delta_Time_MPA,
 #                 fill = Per
 #               )
 #   )
-
-
 ```
 
 
@@ -648,8 +636,8 @@ ggplot(Delta_Time_MPA,
 Fig. 3.  Biomass (A) and revenue (B) differences between the MPA and the no-MPA scenarios.** Results for mid century (2041-2060) under high emission scenario (RCP 8.5) within MPA and surrounding cells up to 7.5 decimal degrees (~825 km) from an MPA border representing 99% of the cumulative distribution. Density plots (C) represent the average difference between the MPA and no-MPA models aggregated by latitude (frequency of values from <-25% to >25%) in all areas, waters containing MPAs, surrounding waters, and unprotected water.
 
 
-```{r Figure_three_Data, eval = F, echo = T}
 
+```r
 # ---------------------- #
 # Delta Models data (Map)
 # ---------------------- #
@@ -739,11 +727,10 @@ Spillover_diff_Lat_1 <- Results_Data %>%
 
 Spillover_diff_Lat_1$total_value <- Spillover_diff_Lat_1$total_value %>% 
   replace_na(0)
-
 ```
 
-```{r Fig_three_plot, eval = F, echo = T}
 
+```r
 # --------------------- #
 # Create maps (A and B)
 # --------------------- #
@@ -906,8 +893,6 @@ save_plot("./data/Global Paper/Submission/Figures/Figure3.png",
           base_height = 15,
           base_width = 20
           )
-
-
 ```
 
 # 6. Paper Statistics
@@ -918,8 +903,8 @@ We are going to determine the statistical significance of changes between the mo
 
 First we tested for normality by estimating the data skewness and kurtosis. Results show that our results are highly skewed with a sharp peak. Hence we carried out a non-parametric tests.
 
-```{r Test_for_normallity, eval = F, echo = T}
 
+```r
 Stats_Data <- All_Models %>% 
   spread("Model","total") %>% 
   mutate(INDEX = as.character(INDEX),
@@ -1016,15 +1001,14 @@ Stats_Data %>%
 qqnorm(Stats_Data$Fish) # Not really normally dist.
 # MPA Model
 qqnorm(Stats_Data$MPA) # Not really normally dist.
-
 ```
 
 ## 6.2 Comparisons between time-periods
 
 Wilcox-on test to compare between time periods 
 
-```{r stats_results_time, eval = F, echo = T}
 
+```r
 Delta_Time_Stats <- All_Models %>% 
   spread(time_period,total) %>% 
   left_join(MPA_Grid,
@@ -1056,15 +1040,14 @@ Delta_Time_Stats <- All_Models %>%
 write.csv(Delta_Time_Stats,
           "/nfs/mpasandclimatechange-data/Global Paper/Paper_Results/Delta_Time_Stats.csv",
           row.names = F)
-
 ```
 
 ## 6.3 Estimate how far spillover goes
 
 In here we estimated how far from the border of the MPA the spillover was significantly different than when no MPA was placed
 
-```{r spillover_distance, eval = F, echo = T}
 
+```r
 Spillover_Stats_Data <- All_Models %>% 
   spread("Model","total") %>% 
   mutate(#INDEX = as.character(INDEX),
@@ -1122,15 +1105,14 @@ unique(CD_Mid$Touching_b)
 
 # Most gridcells are between 0 and around 25%
 plot(ecdf(CD_Mid$Diff_Models))
-
 ```
 
 ## 6.4 Comparisons between models
 
 In here we compared the differences in abundance and MCP between the fish and MPA models to see if they perform differently under climate change
 
-```{r stats_results_models, eval = F, echo = T}
 
+```r
 Delta_Models <- All_Models %>% 
   spread("Model","total") %>% 
   left_join(MPA_Grid,
@@ -1178,13 +1160,12 @@ Delta_Models %>%
       fill = MPA
     )
   )
-
 ```
 
 ## 6.5 Latitudinal relation
 
-```{r latitudinal_spillover, eval = F, echo = T}
 
+```r
 # Abundance LM MPA
 
 LM_Data_MPA <- Results_Data %>% 
@@ -1268,15 +1249,14 @@ LM_Data <- Results_Data %>%
     time_period == "Mid Century",
     RCP == 85,
     Diff_Models == 0)
-
 ```
 
 ## 6.6 Mean and SD stats 
 
 Averages and s.d. for the results section
 
-```{r stats_mean_change, eval = F, echo = T}
 
+```r
 #tropical MPAs vs Polar 
 Region_dat <- Delta_Time %>% 
   filter(Model == "MPA") %>% 
@@ -1374,7 +1354,6 @@ sd(Openpositivedata$MCP_Chng)
 sumy_models <- Results_Data %>% 
   group_by(time_period, Data_Type, RCP, Touching) %>%
   summarize(MEAN_fish=mean(Fish), SD_fish=sd(Fish), Mean_MPA = mean(MPA), SD_MPA = sd(MPA))
-
 ```
 
 # 7 Sensitivity Analysis
@@ -1395,8 +1374,8 @@ At the end we can produce histograms and to see if there are differences between
 
 ## 7.1 Choosing the species
 
-```{r Choose_Species, eval = F, echo = T}
 
+```r
 # Functions needed to get species
 
 source(here::here("DBEM/Functions_Paper2/Get_Spp_Grid.r")) # Chagos grid for species there
@@ -1431,13 +1410,12 @@ readr::write_csv(selected_sensitivity_spp,
 sample(c(0,1), 100, replace = TRUE)
 
 # Send RunSppListSen10.txt to computeCanada over terminal
-
 ```
 
 ## 7.2 Sensitivity Results
 
-```{r Sens_Results, eval = F, echo = T}
 
+```r
 # Load Data need
 MPA_Grid <- fread("/nfs/mpasandclimatechange-data/Data/MPA/grid_MPA_touching.csv",header = TRUE) %>% 
   # filter(NAME == "British Indian Ocean Territory Marine Protected Area (Chagos)") %>% 
@@ -1505,8 +1483,8 @@ min(Sens_PerChange$Diff_Models)
 
 ## 7.3 Sensitivity Figures
 
-```{r Sens_Figures, eval = F, echo = T}
 
+```r
 Sens_PerChange %>% 
   filter(Touching == 2 & Per > 0 & Per < 25) %>% 
   ungroup() %>% 
@@ -1539,8 +1517,6 @@ Sens_PerChange %>%
     filename ="Figure4.png",
     path = "/nfs/mpasandclimatechange-data/Global Paper/Submission_NCC/Figures/"
   )
-
-
 ```
 
 # 8. Supplemental material
@@ -1550,8 +1526,8 @@ Sens_PerChange %>%
 Fig S1. Change in biomass under climate change, incorporating current no-take MPAs.** Results for mid (2041-2060) and end (2081-2099) century in reference to present (1995-2014) under a low (RCP 2.6) and high emission scenario (RCP 8.5). Results from the MPA model with MPAs included in this study outlined in black.
 
 
-```{r Fig_sone_plot, eval = F, echo = T}
 
+```r
 # Do not subset RCP nor timeframe 
 
 ggplot() +
@@ -1585,15 +1561,14 @@ ggplot() +
     filename = "FigureS1.png",
     path= "./data/Global Paper/Submission/Figures"
   )
-
 ```
 
 ## Fig S2 - Supplemental
 
 This is the same figure as Figure 2. But for the end of the century
 
-```{r Fig_S2_Supplemental, eval = F, echo = T}
 
+```r
 # --------------------- #
 # Create maps (A and B)
 # --------------------- #
@@ -1761,5 +1736,4 @@ save_plot("./data/Global Paper/Submission/Figures/FigureS2.png",
           plot,
           base_height = 15,
           base_width = 20)
-
 ```
