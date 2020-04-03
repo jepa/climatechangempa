@@ -17,20 +17,20 @@ To replicate the figures and results of the paper follow this steps:
 
 1. Download the processed data at https://files.sesync.org/index.php/s/XEkNEHyd5keJioT (you will need a password) and move the folder to the repository's "Data" folder. Otherwise change the path to your own data-repository
 
-2. Run the `setup`c *chunk* to load packages and functions needed. Note that this will install all of the packages that you have not installed. The functions will not be used now but they were used in previous steps. The order of the functions is 
+2. Run the `setup`c *chunk* to load packages and functions needed. Note that this will install all of the packages that you have not installed. The functions will not be used now but they were used in previous steps. 
 
 3. Go to the "4. Results" section an run the `FUN_ReadResults` *chunk* (4.1.1). This function is needed to read the datasets you just downloaded. You don't need to run `FUN_ggthemes` (4.1.2) unless you want to replicate the plots.
 
 4. Run *chunk* `Load_Results` (4.2) to load all the data used in the paper.
 
-5. Run the following *chunks* to get results
+5. Run the following *chunks* to get results, plot figures, run statistical analysis, and run sensitivity analysis:
 
 
 # 1.Overall approach
 
 ## 1.1 Step 1 (Ecology)
 
-We first average the Fish Model's Maximum Catch Potential (MCP) of 1995 to 2014 (last years of fisheries data from SAU) for each species for each one of the circulation models (GCM) that we work with (GFDL, MPIL, IPSL). Secondly, we average the 2005-2014 average for all models (To get the 10 years average; "today"). Thirdly, we repeat the steps using the abundance data.
+We first average the Fish Model's Maximum Catch Potential (MCP) of 1995 to 2014 (last years of fisheries data from SAU) for each species for each one of the circulation models (GCM) that we work with (GFDL, MPIL, IPSL). Second, we average the 2005-2014 average for all models (To get the 10 years average; "today"). Third, we repeat the steps using the abundance data.
 
 **Result of step 1:** The result is the mean MCP of all models and time period for each species in our database for each grid-cell of the world.
 
@@ -195,7 +195,7 @@ colnames(Lon_Lat_DBEM) <- c("INDEX","Longitude","Latitude")
 
 ```{r main_routine, eval = F, echo = T}
 
-# This chunk runs the model for each conservation (fish and MPA) and climate change (low and high) scenario
+# This chunk runs the model for each iteration (fish and MPA) and climate change (low and high) scenario
 
 start <- Sys.time()
 fish_26 <- model_results(Model="Fish", 
@@ -422,8 +422,6 @@ MPA_Grid <- fread(paste(Data_Path,"MPA/grid_MPA_touching.csv",sep=""),header = T
   rename(INDEX = Seq) %>% 
   select(-Lon,-Lat)
 
-# hist(MPA_Grid$Distance)
-
 # ---------------- #
 # SESYNC-DBEM Data 
 # ---------------- #
@@ -475,7 +473,7 @@ Delta_Time <- All_Models %>%
   spread(time_period,total) %>% 
   mutate_at(vars(`Mid Century`, # Estimate percentage differences
                  `End of Century`),
-            funs(ifelse(Today == 0 & . == 0, 0, # If for no change than 0
+            funs(ifelse(Today == 0 & . == 0, 0, # If no change than 0
                         ifelse(Today == 0 & . > 0, 100, # If changes from 0 to anything then 100
                                ((.-Today)/((.+Today)/2))*100 # Estimate percentage differences
                         )
@@ -493,11 +491,6 @@ Delta_Time <- All_Models %>%
   filter(Measure == "Mean") %>% 
   left_join(MPA_Grid,
             by = "INDEX")
-
-
-# head(Delta_Time)
-# max(Delta_Time$Per)
-# min(Delta_Time$Per)
 
 ```
 
@@ -912,7 +905,7 @@ save_plot("./data/Global Paper/Submission/Figures/Figure3.png",
 
 # 6. Paper Statistics
 
-We are going to determine the statistical significance of changes between the models (fish/mpa) and time frames (present/future) using a t.test or Wilcox test.
+We are going to determine the statistical significance of differences between the models (fish/mpa) and time frames (present/future) using a t.test or Wilcox test.
 
 ## 6.1 Test assumptions
 
@@ -1182,6 +1175,7 @@ Delta_Models %>%
 ```
 
 ## 6.5 Latitudinal relation
+Here we used a linear model to observe how the differences between models change with latitude. 
 
 ```{r latitudinal_spillover, eval = F, echo = T}
 
@@ -1257,18 +1251,6 @@ summary(LM_One_Open)
 plot(LM_Data_Open$Abs_Latitude~LM_Data_Open$Diff_Models)
 
 
-# Da fuuuuuuuck is wrong with those 0's
-
-LM_Data <- Results_Data %>% 
-  mutate(Abs_Latitude = abs(Latitude)) %>% 
-  filter(
-    Data_Type == "Biomass",
-    Measure == "Mean",
-    # Touching_b == "MPA",
-    time_period == "Mid Century",
-    RCP == 85,
-    Diff_Models == 0)
-
 ```
 
 ## 6.6 Mean and SD stats 
@@ -1323,10 +1305,6 @@ Non_tropicalMPA_dat = Region_dat%>% filter(Model == "MPA", Data_Type == "Abd",  
 
 mean(Non_tropicalMPA_dat$MCP_Chng)
 sd(Non_tropicalMPA_dat$MCP_Chng)
-
-# head(Delta_Time)
-# max(Delta_Time$Per)
-# min(Delta_Time$Per)
 
 
 #min and max change in biomass 
