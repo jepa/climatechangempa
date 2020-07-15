@@ -16,7 +16,7 @@ This repository is intended to support the project *Marine Protected Areas Can R
 
 4. Department of Marine Affairs, University of Rhode Island, Kingston, RI, USA
 
-5. Department of International Studies, American University of Sharjah, Sharjah, United Arab Emirates
+5. Sociology & Anthropology Department, Nazarbayev University, Nur-Sultan, Kazakhstan.
 
 6. Department of Applied Economics, Oregon State University, Corvallis, OR, USA"
 
