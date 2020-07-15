@@ -35,8 +35,6 @@ In this repository you will find all of the code related to the manuscript *Mari
 
 - **Main_script.Rmd**: This is the *RMD* where you can find all the data analysis for the manuscript including results and figures
 
-- **Manuscript_Draft.RMD**: Manuscript draft submitted as a PDF or word document to journal
-
 ### Folders
 
 - **Figures**: Manuscript final figures
