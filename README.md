@@ -1,31 +1,37 @@
 
-# Marine Protected Areas Can Reduce Localized Losses to Fisheries Under Climate Change
+# Incorporating protected areas into global fish biomass projections under climate change
 
-This repository is intended to support the project *Marine Protected Areas Can Reduce Localized Losses to Fisheries Under Climate Change* 
+
+This repository is intended to support the project *Incorporating protected areas into global fish biomass projections under climate change* 
 
 # Authors
-- Juliano Palacios-Abrantes*<sup>1</sup>, Sarah M. Roberts<sup>2</sup>, Tim Cashion<sup>3</sup>, Talya ten Brink<sup>4</sup>, William W.L. Cheung<sup>1</sup>, Anne Mook<sup>5</sup> and Tu Nguyen<sup>6</sup>
+
+- Juliano Palacios-Abrantes*<sup>1,2</sup>, Sarah M. Roberts<sup>3,4</sup>, Tim Cashion<sup>5</sup>, Talya ten Brink<sup>6</sup>, William W.L. Cheung<sup>1</sup>, Anne Mook<sup>7</sup> and Tu Nguyen<sup>8</sup>
 
 # Affiliations
 
 1. Changing Ocean Research Unit, Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, BC, Canada
 
-2. Marine Geospatial Ecology Lab, Nicholas School of the Environment and Earth Sciences, Duke University, Durham, NC, USA
+2. Center for Limnology, University of Wisconsin, Madison, WI, USA
 
-3. Fisheries Economics Research Unit, Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, BC, Canada
+3. Marine Geospatial Ecology Lab, Nicholas School of the Environment and Earth Sciences, Duke University, Durham, NC, USA
 
-4. Department of Marine Affairs, University of Rhode Island, Kingston, RI, USA
+4. Department of Earth, Marine, and Environmental Science, University of North Carolina at Chapel Hill, Chapel Hill, NC 27514
 
-5. Sociology & Anthropology Department, Nazarbayev University, Nur-Sultan, Kazakhstan.
+5. Fisheries Economics Research Unit, Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, BC, Canada
 
-6. Department of Applied Economics, Oregon State University, Corvallis, OR, USA"
+6. Department of Marine Affairs, University of Rhode Island, Kingston, RI, USA
+
+7. Institute for Research in the Social Sciences, Colorado State University, CO, USA
+
+8. Department of Applied Economics, Oregon State University, Corvallis, OR, USA"
 
 \*Corresponding author: Juliano Palacios-Abrantes, j.palacios@oceans.ubc.ca
 
 
 # Project Goal:
 
-- Evaluate the impacts in marine protected areas in terms of fish biomass and revenue from fisheries under climate change
+- Evaluate the impacts of climate change to marine conservation in terms of fish biomass within and outise marine reserves
 
 ## Files and folders organization:
 
