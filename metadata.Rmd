@@ -1,0 +1,118 @@
+---
+title: "Read Me"
+author:
+- "Juliano Palacios-Abrantes*^1,2^, Sarah M. Roberts^3^, Tim Cashion^4^, Talya ten
+  Brink^5^,"
+- William W.L. Cheung^1, Anne Mook^6^ and Tu Nguyen^7^
+date: "December, 2022"
+output:
+  pdf_document:
+    df_print: paged
+    keep_md: yes
+---
+
+# Affiliations
+
+1 Changing Ocean Research Unit, Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, BC, Canada
+
+2 Center for Limnology, University of Wisconsin, Madison, WI, USA
+
+3 Marine Geospatial Ecology Lab, Nicholas School of the Environment and Earth Sciences, Duke University, Durham, NC, USA
+
+4 Department of Earth, Marine, and Environmental Science, University of North Carolina at Chapel Hill, Chapel Hill, NC 27514	
+5 Institute for Research in the Social Sciences, Colorado State University, CO, USA
+
+6 Department of Marine Affairs, University of Rhode Island, Kingston, RI, USA
+
+7 Fisheries Economics Research Unit, Institute for the Oceans and Fisheries, University of British Columbia, Vancouver, BC, Canada
+
+8 Marine Affairs Program, Dalhousie University, Halifax, NS, Canada
+
+- *Corresponding author: Juliano Palacios-Abrantes, j.palacios@oceans.ubc.ca
+
+# General Information
+
+This repository contains the primary data for the paper "Incorporating protected areas into global fish biomass projections under climate change" published in 2022 in *FACETS*
+
+- Data created in 2018 by the mentioned authors 
+- Geographic location: Global (marine realm)
+- Keywords, marine conservation, climate change, marine protected area, MPA, computer modelling, earth system model, species distribution model
+
+# License
+
+CC0 - "Public Domain Dedication" 
+
+# Data Context
+
+Data produced over computer modelling exercises to understand the impacts of climate change on marine reserves
+
+## Data methods
+
+Please see https://github.com/jepa/climatechangempa for complete protocol of data creation and [Palacios-Abrantes et al, 2022]() for methods.
+
+# Structure of files 
+
+All four datasets produced in the research available here are `.csv` files with only one sheet:
+
+- `Fish_RCP26_All_GCMs_20.csv` (5545231 observations x 11 variables), dataset representing the no-conservation scenario for RCP 2.6 (low emission scenario)
+- `Fish_RCP85_All_GCMs_20.csv` (5545231 observations x 11 variables), dataset representing the no-conservation scenario for RCP 8.5 (high emission scenario)
+- `MPA_RCP26_All_GCMs_20.csv` (5545231 observations x 11 variables), dataset representing the conservation scenario for RCP 2.6 (low emission scenario)
+- `MPA_RCP85_All_GCMs_20.csv` (5545231 observations x 11 variables), dataset representing the no-conservation scenario for RCP 8.5 (high emission scenario)
+
+*In all cases, results are presented as 20 years mean of three time periods and averaged of three Earth System Models used in the research (GFDFL, IPSL, MPIS).*
+
+# Naming conventions
+
+- RCP names according to the Representative Concentration Pathway (RCP) adopted by the Intergovernmental Panel on Climate Change (https://en.wikipedia.org/wiki/Representative_Concentration_Pathway)
+- habitat, habitat type according to fishbase (www.fishbase.org)
+
+# Sources used
+
+Please see https://github.com/jepa/climatechangempa for a complete list of external data-sources
+
+# Data confidentiality and permissions
+
+These data sets are published under the Apache License 2.0. All other data sources are publicly available under their specific licenses available on their web pages (see section "Source used" above). 
+
+# Variable naming 
+
+
+```{r clean_data, eval = F, echo = F}
+
+data_sets <- c("Fish_RCP26_All_GCMs_20.csv", "Fish_RCP85_All_GCMs_20.csv", "MPA_RCP26_All_GCMs_20.csv", "MPA_RCP85_All_GCMs_20.csv")
+
+library(dplyr)
+
+for(i in 1:4){
+
+  name <- paste0("/Volumes/Enterprise/Data/SESYNC/Data/",data_sets[i])
+  
+  read.csv(name) %>% 
+    janitor::clean_names() %>% 
+    write.csv(name, row.names = F)
+    
+  
+}
+
+```
+
+
+- index, a unique identifier number for each 0.5 x 0.5 grid cell
+- longitude, the angular distance of a grid east or west of the meridian at Greenwich in degrees and minutes.
+- latitude, the angular distance of a grid north or south of the earth's equator expressed in degrees and minutes
+- time_period, averaged of time periods representing the present day (1995-2014), the mid-21st century (2041-2060) and the end of the 21st century (2081-2100)
+- data_type, abundance (Abd) or maximum catch potential (Catch) derived from the DBEM
+- measure, mean and standard deviation of the result (total) by data type (abundance or maximum catch potential) for all three Earth System Models and the standard deviation
+- total, numeric value related to data_type (unit-less)
+- n, number of unique species in the grid cell
+- rcp, Representative Concentration Pathways - RCP (*26* for low emission and 85 for high emission)
+- model, conservation scenario (*MPA* for conservation and *Fish* for no-conservation)
+- habitat, type of habitat according to fish base
+
+```{r show_data, eval = T, echo = F, message = F, warning = F}
+library(dplyr)
+read.csv("/Volumes/Enterprise/Data/SESYNC/Data/Fish_RCP26_All_GCMs_20.csv") %>% 
+  head() %>% 
+  knitr::kable(caption = "Screenshot of dataset containing first 5 rows for reference")
+
+```
