@@ -1,6 +1,9 @@
 ---
 title: "SESYNC MPA and Climate Change DBEM Analysis"
-author: ""
+author:
+- "Juliano Palacios-Abrantes*^1,2^, Sarah M. Roberts^3^, Tim Cashion^4^, Talya ten
+  Brink^5^,"
+- William W.L. Cheung^1, Anne Mook^6^ and Tu Nguyen^7^
 # date: "04/05/2018"
 output: 
   html_document: 
@@ -11,7 +14,7 @@ editor_options:
 
 # Instructions
 
-This markdown contains all of the code used to analyze the outputs from the DBEM and produce the results shown in the manuscript. Steps One, Two, and Three were used to analyze the raw DBEM outputs with the functions located in the `Functions` folder. 
+This markdown contains all of the code used to analyze the outputs from the DBEM and produce the results shown in the manuscript with the functions located in the `Functions` folder. 
 
 To replicate the figures and results of the paper follow this steps:
 
@@ -29,23 +32,6 @@ To replicate the figures and results of the paper follow this steps:
 **Note:** Chunks where `eval = F` will not work.
 
 
-# 1.Overall approach
-
-## 1.1 Step 1 (Ecology)
-
-We first average the Fish Model's Maximum Catch Potential (MCP) of 1995 to 2014 (last years of fisheries data from SAU) for each species for each one of the circulation models (GCM) that we work with (GFDL, MPIL, IPSL). Second, we average the 2005-2014 average for all models (To get the 10 years average; "today"). Third, we repeat the steps using the abundance data.
-
-**Result of step 1:** The result is the mean MCP of all models and time period for each species in our database for each grid-cell of the world.
-
-## 1.2 Step 2 (Economics)
-
-We estimate fisheries revenues as the weighted average price multiplied by the predicted catch in each cell. As countries have different prices for different species, we used current catch proportions by country and species in each cell to derive a weighted average price per tonne for each species. The weighted price was established using the proportion of each country’s catch multiplied by the country-species specific price. All prices were drawn from a global fisheries ex-vessel price database (Tai et al. 2017). We calculated the existence value as the potential ex-vessel value of the species (their current ex-vessel price multiplied by their biomass). Within a no-take MPA, catches are assumed to be zero. If a cell is partially occupied by a no-take MPA, the fishing mortality (and thus catches) of a species is reduced by the proportion of the cell area occupied by the MPA.
-
-**Result of step 2:** The result is the mean fisheries revenue of all models and time period for each species in our database for each grid-cell of the world. We also compute the existence value calculated as the mean weighted fish price multiplied by ABD for each species for each cell. 
-
-## 1.3 Step 3 (Final Result)
-
-**Result of step 3:** We want MCP, ABD and economic value, per grid cell Today (1995 - 2014); Mid century (2041-2060); End Century (2080-2099).
 
 # 2. Pre-Analysis; Determine MPA percentage grid
 
