@@ -2,7 +2,7 @@
 # Incorporating protected areas into global fish biomass projections under climate change
 
 
-This repository is intended to support the project *Incorporating protected areas into global fish biomass projections under climate change* 
+This repository supports the paper *[Incorporating protected areas into global fish biomass projections under climate change](https://www.facetsjournal.com/doi/10.1139/facets-2022-0101)* 
 
 # Authors
 
