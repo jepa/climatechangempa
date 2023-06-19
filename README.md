@@ -26,7 +26,9 @@ This repository is intended to support the project *Incorporating protected area
 
 8. Department of Applied Economics, Oregon State University, Corvallis, OR, USA"
 
-\*Corresponding author: Juliano Palacios-Abrantes, j.palacios@oceans.ubc.ca
+\*Corresponding author: Juliano Palacios-Abrantes, j.palacios[at]oceans.ubc.ca
+
+**Link to paper:** https://www.facetsjournal.com/doi/10.1139/facets-2022-0101
 
 
 # Project Goal:
@@ -46,3 +48,5 @@ In this repository you will find all of the code related to the manuscript *Mari
 - **Figures**: Manuscript final figures
 
 - **Functions**: Folder containing functions needed to run the analysis
+
+*This repository has been archived and is no longer updated. The master branch contains the most updated version*
